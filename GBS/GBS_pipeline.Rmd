@@ -1,0 +1,57 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Exploring GBS quality
+
+## Missingness per individual
+
+```{r}
+
+imiss <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.edu/workdir/rjl278/Sorghum/GBS/GBS_matching.imiss", header = T)
+imiss
+hist(imiss$F_MISS, main =  "Distribution of missingness per individual")
+
+```
+
+## Missingness per site basis 
+
+```{r}
+
+lmiss <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.edu/workdir/rjl278/Sorghum/GBS/GBS_matching.lmiss", header = T)
+lmiss
+hist(lmiss$F_MISS, main =  "Distribution of missingness per site")
+
+```
+
+## SNP density in the GBS dataset before imputation
+
+```{r, fig.width= 15, fig.height=5}
+
+snpden <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.edu/workdir/rjl278/Sorghum/GBS/GBS_matching.snpden.toplot", header = T)
+colnames(snpden) <- c("SNP","CHR", "BP", "n")
+snpden$CHR <- as.integer(as.numeric(as.character(snpden$CHR)))
+snpden
+
+library(qqman)
+library(wesanderson)
+wes <- wes_palette("Chevalier")
+
+
+
+manhattan(snpden, cex = 0.5, p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+    suggestiveline = FALSE, main = "GBS density", ylim = (c(0,1.1)) )
+
+
+manhattan(subset(snpden, CHR ==5, cex = 0.5), p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+    suggestiveline = FALSE, main = "GBS density", ylim = (c(0,1)) )
+ 
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

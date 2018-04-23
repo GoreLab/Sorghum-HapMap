@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-# ############ Calculate Gene Density per bin  #######################
-## Input : gff file                                              ####       
-## Roberto Lozano                   ... rjl278@cornell.edu       ####
-
+############## Calculate Gene Density per bin  #######################
+## example: $ 1_density.py GFF3 chromosome                        ####
+## outputs the snp density per bin per chromosome       	  ####
+## Roberto Lozano ..................... rjl278@cornell.edu        ####
+######################################################################
 
 import sys
 import numpy as np
@@ -11,8 +12,7 @@ import numpy as np
 gff_file        = sys.argv[1] # gff file
 n               = sys.argv[2] # chromosome to test
 
-########     Loading Chromosome size information of the cassava genome  ########
-#########
+########     Loading Sorghum Chromosome size information      ########
 
 chrm = { 'Chr01' : 80884392,
                 'Chr02' : 77742459,
@@ -25,12 +25,12 @@ chrm = { 'Chr01' : 80884392,
                 'Chr09' : 59416394,
                 'Chr10' : 61233695 }
 
-############################################################################################
+########################################################################
 
 bsize = 100000 # size of bin                   
 bins = int(chrm['Chr'+str(n)])/bsize + 1  # Number of bins per chromosome
 
-#############################################################################################
+########################################################################
 
 
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="3000px" height="3000px" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="bg">
+<rect x="0" y="0" width="3000px" height="3000px" style="fill:rgb(255,255,255);"/>
+</g>
+<g id="ideograms">
+<path d="M1500.000,170.000 A1330.000,1330.000 40.000 0,1 2364.906,489.635 L2377.912,474.441 A1350.000,1350.000 0.000 0,0 1500.000,150.000 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M1500.000,170.000 A1330.000,1330.000 40.000 0,1 2364.906,489.635 L2377.912,474.441 A1350.000,1350.000 0.000 0,0 1500.000,150.000 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M2394.744,515.961 A1330.000,1330.000 40.000 0,1 2814.584,1298.084 L2834.352,1295.047 A1350.000,1350.000 0.000 0,0 2408.199,501.163 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M2394.744,515.961 A1330.000,1330.000 40.000 0,1 2814.584,1298.084 L2834.352,1295.047 A1350.000,1350.000 0.000 0,0 2408.199,501.163 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M2820.036,1337.500 A1330.000,1330.000 40.000 0,1 2648.459,2170.777 L2665.729,2180.864 A1350.000,1350.000 0.000 0,0 2839.886,1335.057 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M2820.036,1337.500 A1330.000,1330.000 40.000 0,1 2648.459,2170.777 L2665.729,2180.864 A1350.000,1350.000 0.000 0,0 2839.886,1335.057 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M2627.879,2204.833 A1330.000,1330.000 40.000 0,1 2031.718,2719.088 L2039.714,2737.420 A1350.000,1350.000 0.000 0,0 2644.839,2215.432 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M2627.879,2204.833 A1330.000,1330.000 40.000 0,1 2031.718,2719.088 L2039.714,2737.420 A1350.000,1350.000 0.000 0,0 2644.839,2215.432 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M1995.010,2734.449 A1330.000,1330.000 40.000 0,1 1174.069,2789.445 L1169.168,2808.835 A1350.000,1350.000 0.000 0,0 2002.454,2753.012 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M1995.010,2734.449 A1330.000,1330.000 40.000 0,1 1174.069,2789.445 L1169.168,2808.835 A1350.000,1350.000 0.000 0,0 2002.454,2753.012 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M1135.640,2779.118 A1330.000,1330.000 40.000 0,1 533.162,2413.304 L518.623,2427.037 A1350.000,1350.000 0.000 0,0 1130.161,2798.353 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M1135.640,2779.118 A1330.000,1330.000 40.000 0,1 533.162,2413.304 L518.623,2427.037 A1350.000,1350.000 0.000 0,0 1130.161,2798.353 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M506.272,2383.971 A1330.000,1330.000 40.000 0,1 185.667,1703.538 L165.902,1706.599 A1350.000,1350.000 0.000 0,0 491.329,2397.264 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M506.272,2383.971 A1330.000,1330.000 40.000 0,1 185.667,1703.538 L165.902,1706.599 A1350.000,1350.000 0.000 0,0 491.329,2397.264 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M180.166,1664.128 A1330.000,1330.000 40.000 0,1 288.307,951.639 L270.086,943.393 A1350.000,1350.000 0.000 0,0 160.319,1666.596 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M180.166,1664.128 A1330.000,1330.000 40.000 0,1 288.307,951.639 L270.086,943.393 A1350.000,1350.000 0.000 0,0 160.319,1666.596 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M305.254,915.636 A1330.000,1330.000 40.000 0,1 753.618,399.176 L742.394,382.622 A1350.000,1350.000 0.000 0,0 287.288,906.848 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M305.254,915.636 A1330.000,1330.000 40.000 0,1 753.618,399.176 L742.394,382.622 A1350.000,1350.000 0.000 0,0 287.288,906.848 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+<path d="M786.884,377.340 A1330.000,1330.000 40.000 0,1 1460.212,170.595 L1459.614,150.604 A1350.000,1350.000 0.000 0,0 776.160,360.458 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:rgb(0,0,0);" />
+<path d="M786.884,377.340 A1330.000,1330.000 40.000 0,1 1460.212,170.595 L1459.614,150.604 A1350.000,1350.000 0.000 0,0 776.160,360.458 Z" style="stroke-width:2.0;stroke:rgb(115,115,115);stroke-linecap:round;fill:none;" />
+</g>
+<defs>
+<pattern id="vline-sparse" width="10" height="10" patternTransform="rotate(0 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="10" style="stroke:black;stroke-width:2" /></pattern>
+<pattern id="vline" width="10" height="10" patternTransform="rotate(0 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="10" style="stroke:black;stroke-width:5" /></pattern>
+<pattern id="hline-sparse" width="10" height="10" patternTransform="rotate(0 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="10" y2="0" style="stroke:black;stroke-width:2" /></pattern>
+<pattern id="hline" width="10" height="10" patternTransform="rotate(0 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="10" y2="0" style="stroke:black;stroke-width:5" /></pattern>
+<pattern id="checker" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="10" y2="0" style="stroke:black;stroke-width:5" /><line x1="0" y1="0" x2="0" y2="10" style="stroke:black;stroke-width:4" /></pattern>
+<pattern id="checker" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="10" y2="0" style="stroke:black;stroke-width:2" /><line x1="0" y1="0" x2="0" y2="10" style="stroke:black;stroke-width:2" /></pattern>
+</defs>
+</svg>

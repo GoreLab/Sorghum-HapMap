@@ -18,4 +18,7 @@ Working Title:
 
 ## Evolutionary model:
 
-## Plots:
+## Plots: 
+(CIRCOS and ... folders)
+
+1_gene_density.py Calculates gene density per chromosome from a gff3 file

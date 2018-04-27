@@ -19,6 +19,7 @@ het <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.ed
 
 hist(het$P.Het, xlab= "% Heterozygosity", main="")
 
+
 ```
 
 ```{r}
@@ -32,6 +33,36 @@ maf_table <- het %>%
 
 plot(maf_table$MAF, maf_table$P.Het, pch=1, cex=0.4, col=alpha("black",alpha = 0.1), xlab = "MAF", ylab = "% heterozygosity" )
 
+
+```
+
+```{r, fig.width= 15, fig.height=5}
+
+hetperchr <- het %>%
+  sample_frac(.2) %>%
+  select(ID, P.Het) %>%
+  mutate(tempcol = stringr::str_split(ID, '_')) %>%
+  rowwise() %>%
+  mutate(source = unlist(tempcol)[1], medium = unlist(tempcol)[2])%>%
+  select(-tempcol) %>%
+  set_colnames(c("SNP","n","chr", "BP")) %>%
+  mutate(CHR = substr(chr, 4,7)) %>%
+  select(-chr)
+
+
+hetperchr$CHR <- as.integer(as.numeric(as.character(hetperchr$CHR)))
+hetperchr$BP <- as.integer(as.numeric(as.character(hetperchr$BP)))
+head(hetperchr)
+
+library(qqman)
+library(wesanderson)
+wes <- wes_palette("Cavalcanti")
+
+#manhattan(subset(snpden, CHR ==5, cex = 0.5), p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+#    suggestiveline = FALSE, main = "SNP density", ylim = (c(0,50)) )
+
+manhattan(hetperchr, cex = 0.1, p = "n", logp = FALSE, ylab = "%het", genomewideline = FALSE, col = alpha(wes,alpha=0.1),
+    suggestiveline = FALSE, main = "%het chromosome distribution", ylim = (c(0,0.15)) )
 
 ```
 
@@ -66,14 +97,57 @@ plot(maf_table$MAF, maf_table$P.Het, pch=1, cex=0.4, col=alpha("black",alpha = 0
 
 ```
 
-```{r}
+```{r, fig.width= 15, fig.height=5}
 
-table <- read.delim(file = "/home/roberto/plots/5M_imputed.het", header = T)
 
-hist(table$F, breaks = 20)
-plot(density(table$F), ylab = "number of taxa", xlab= "Inbreeding coefficient", main="" )
+hetperchr <- del_table %>%
+  select(ID, P.Het) %>%
+  mutate(tempcol = stringr::str_split(ID, '_')) %>%
+  rowwise() %>%
+  mutate(source = unlist(tempcol)[1], medium = unlist(tempcol)[2])%>%
+  select(-tempcol) %>%
+  set_colnames(c("SNP","n","chr", "BP")) %>%
+  mutate(CHR = substr(chr, 4,7)) %>%
+  select(-chr)
+
+
+hetperchr$CHR <- as.integer(as.numeric(as.character(hetperchr$CHR)))
+hetperchr$BP <- as.integer(as.numeric(as.character(hetperchr$BP)))
+head(hetperchr)
+
+library(qqman)
+library(wesanderson)
+wes <- wes_palette("Cavalcanti")
+
+#manhattan(subset(snpden, CHR ==5, cex = 0.5), p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+#    suggestiveline = FALSE, main = "SNP density", ylim = (c(0,50)) )
+
+manhattan(hetperchr, cex = 0.5, p = "n", logp = FALSE, ylab = "%het", genomewideline = FALSE, col = wes,
+    suggestiveline = FALSE, main = "Deleterious alleles %het chromosome distribution", ylim = (c(0,0.15)) )
+
+
+
 ```
 
+
+
+
+
+```{r}
+
+M5 <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.edu/workdir/rjl278/Sorghum/Imputation/5M.het", header = T)
+
+hist(M5$F, breaks = 20)
+plot(density(M5$F), ylab = "number of taxa", xlab= "Inbreeding coefficient", main="" )
+```
+
+```{r}
+
+M5_imp <- read.delim(file = "/run/user/1000/gvfs/sftp:host=cbsugore02.tc.cornell.edu/workdir/rjl278/Sorghum/Imputation/5M_imputed.het", header = T)
+
+hist(M5_imp$F, breaks = 20)
+plot(density(M5_imp$F), ylab = "number of taxa", xlab= "Inbreeding coefficient", main="" )
+```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 

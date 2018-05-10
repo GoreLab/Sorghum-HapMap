@@ -3,7 +3,8 @@
 import pysam
 
 #read the input file
-myvcf=pysam.VariantFile("toy.vcf","r")
+myfile = sys.argv[1]
+myvcf=pysam.VariantFile(myfile,"r")
 
 # Add the HP field to header. Say its a string and can take any no. of values. It depends what format you want to give.
 myvcf.header.formats.add("AB","1","Integer","Allele Balance")

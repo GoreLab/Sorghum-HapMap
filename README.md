@@ -16,6 +16,8 @@ Working Title:
 
 6_joint_variant_calling.sh
 
+## Describing the Population:
+
 ## Evolutionary model:
 
 ## Plots: 

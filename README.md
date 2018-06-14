@@ -18,6 +18,9 @@ Working Title:
 
 ## Describing the Population:
 
+PrincipalComponentAnalysis.Rmd: (/HAPMAP/)
+Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
+
 ## Evolutionary model:
 
 ## Plots: 

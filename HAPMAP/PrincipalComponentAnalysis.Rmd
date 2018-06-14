@@ -1,0 +1,278 @@
+---
+title: "Pincipal Component Analysis"
+output: html_notebook
+---
+
+# POPULATION STRUCTURE THROUGH PCA
+
+## Calculatin PCAs 
+
+```{r}
+
+#source("http://bioconductor.org/biocLite.R")
+#biocLite("gdsfmt")
+#biocLite("SNPRelate")
+
+library(gdsfmt)
+library(SNPRelate)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+
+# Get the path of the plink files
+bed.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.bed"
+fam.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.fam"
+bim.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.bim"
+
+# Build the gdsdb
+snpgdsBED2GDS(bed.fn, fam.fn, bim.fn,out.gdsfn ="test.gds")
+snpgdsSummary("test.gds")
+genofile <- snpgdsOpen("test.gds")
+
+# Getting the PCA object
+pca <- snpgdsPCA(genofile, num.thread=2)
+
+# Calculate the percentage of variance explained by the first 10 PC
+pc.percent <- pca$varprop*100
+head(round(pc.percent, 2)) 
+
+```
+
+## Coloring by Batches
+
+```{r, fig.width=15, fig.height=6}
+
+tab <- data.frame(sample.id = pca$sample.id,
+    EV1 = pca$eigenvect[,1],    # the first eigenvector
+    EV2 = pca$eigenvect[,2],    # the second eigenvector
+    EV3 = pca$eigenvect[,3],
+    EV4 = pca$eigenvect[,4],
+    stringsAsFactors = FALSE)
+colnames(tab) <- c("ID", "EV1", "EV2", "EV3", "EV4")
+
+#Load the metadata
+metadata <- read.delim("/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_metadata.txt")
+
+#Join the eigenvalues with the metadata
+taba <- tab %>%
+  left_join(metadata, by="ID")
+
+library(ggplot2)
+library(wesanderson)
+library(patchwork)
+
+fill <- wes_palette("IsleofDogs1")
+
+p1 <- ggplot(taba, aes(EV1, EV2)) +
+  geom_point(aes(colour = factor(Batch)), alpha =0.5, shape=19) +
+  scale_color_manual(values=c("red", "blue", fill[1], fill[2], fill[3], fill[4])) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p2 <- ggplot(taba, aes(EV1,EV3)) +
+  geom_point(aes(colour = factor(Batch)), alpha =0.5, shape=19) +
+  scale_color_manual(values=c("red", "blue", fill[1], fill[2], fill[3], fill[4])) +
+  ylab("Eigenvalue 3 (3.29%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p1 + p2
+
+```
+
+## Coloring by Type (Sweet, cellulosic, grain)
+
+```{r, fig.width=15, fig.height=6}
+
+p <- ggplot(taba, aes(EV1, EV2)) +
+  geom_point(aes(colour = factor(Type)), alpha =0.5, shape=19) +
+  scale_color_manual(values=c("red", "blue", fill[1], fill[2], fill[3], fill[4])) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p2 <- ggplot(taba, aes(EV1, EV3)) +
+  geom_point(aes(colour = factor(Type)), alpha =0.5, shape=19) +
+  scale_color_manual(values=c("red", "blue", fill[1], fill[2], fill[3], fill[4])) +
+  ylab("Eigenvalue 3 (3.20%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+library(patchwork)
+p + p2
+
+```
+
+
+## Coloring by races
+
+```{r, fig.width=18, fig.height=10}
+
+
+pal <- wes_palette("Zissou1", 100, type = "continuous")
+cal <- wes_palette("Cavalcanti1", 20, type = "continuous")
+il <- wes_palette("GrandBudapest1", 20, type = "continuous")
+
+
+p <- ggplot(taba, aes(EV1, EV2)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p2 <- ggplot(taba, aes(EV1, EV3)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 3 (3.20%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p3 <- ggplot(taba, aes(EV1, EV4)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 4 (2.19%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p4 <- ggplot(taba, aes(EV2, EV3)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 3 (3.20%)") +
+  xlab("Eigenvalue 2 (3.90%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p+ p2 + p3 + p4 + ncol(2)
+
+```
+
+
+```{r}
+
+plotazo <-p + p2 + p3 + p4 
+ggsave("/home/NVME/PCA.jpg", plot= plotazo, device = "jpg", scale = 1, width = 13, height = 5, units = c("in"),dpi = 250, limitsize = TRUE)
+
+```
+
+```{r, fig.width=15, fig.height=6}
+
+p <- ggplot(taba, aes(EV1, EV2)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p2 <- ggplot(taba, aes(EV1, EV4)) +
+  geom_point(aes(colour = factor(Race)), alpha =0.6, shape=19) +
+  scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 4 (2.19%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p + p2
+
+```
+
+

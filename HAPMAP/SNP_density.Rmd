@@ -1,0 +1,30 @@
+---
+title: "SNP distribution"
+output: html_notebook
+---
+
+## SNP density 
+
+```{r, fig.width= 15, fig.height=5}
+
+snpden <- read.delim(file = "/home/MENDEL/Sorghum/WGS/VCF_2.0/STAGE6.density", header = T)
+colnames(snpden) <- c("SNP","CHR", "BP", "n")
+snpden$CHR <- as.integer(as.numeric(as.character(snpden$CHR)))
+
+library(qqman)
+library(wesanderson)
+wes <- wes_palette("Chevalier1")
+
+manhattan(snpden, cex = 0.5, p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+    suggestiveline = FALSE, main = "HapMap SNP density", ylim = (c(0,60)) )
+
+
+#Subsetting by chromosomes
+#manhattan(subset(snpden, CHR ==1, cex = 0.5), p = "n", logp = FALSE, ylab = "SNPs/kb", genomewideline = FALSE, col = wes,
+#    suggestiveline = FALSE, main = "Chromosome 1", ylim = (c(0,60)) )
+ 
+
+```
+
+
+

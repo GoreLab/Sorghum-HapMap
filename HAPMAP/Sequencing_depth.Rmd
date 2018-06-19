@@ -1,0 +1,35 @@
+---
+title: "Sequencing Depth"
+output: html_notebook
+---
+
+## Plot the Sequencing Depth per Batch
+
+```{r}
+
+metadata <- read.delim("/home/MENDEL/Sorghum/WGS/VCF_2.0/PCA/TERRA_metadata.txt")
+
+
+p<-ggplot(metadata, aes(x=Batch, y=Depth, fill=Batch)) +
+  geom_boxplot(width=0.5) +
+  scale_fill_brewer(palette="Dark2") +
+  ylim(0,80) +
+  ylab("Sequencing Depth") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+p
+
+
+
+```
+
+

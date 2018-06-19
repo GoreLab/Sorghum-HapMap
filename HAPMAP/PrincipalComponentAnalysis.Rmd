@@ -5,7 +5,7 @@ output: html_notebook
 
 # POPULATION STRUCTURE THROUGH PCA
 
-## Calculatin PCAs 
+## Calculating PCAs 
 
 ```{r}
 
@@ -20,9 +20,9 @@ library(magrittr)
 library(tidyr)
 
 # Get the path of the plink files
-bed.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.bed"
-fam.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.fam"
-bim.fn <- "/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_remover.bim"
+bed.fn <- "/home/MENDEL/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.bed"
+fam.fn <- "/home/MENDEL/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.fam"
+bim.fn <- "/home/MENDEL/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.bim"
 
 # Build the gdsdb
 snpgdsBED2GDS(bed.fn, fam.fn, bim.fn,out.gdsfn ="test.gds")
@@ -51,7 +51,7 @@ tab <- data.frame(sample.id = pca$sample.id,
 colnames(tab) <- c("ID", "EV1", "EV2", "EV3", "EV4")
 
 #Load the metadata
-metadata <- read.delim("/home/MENDEL/WGS/VCF_2.0/PCA/TERRA_metadata.txt")
+metadata <- read.delim("/home/MENDEL/Sorghum/WGS/VCF_2.0/PCA/TERRA_metadata.txt")
 
 #Join the eigenvalues with the metadata
 taba <- tab %>%
@@ -275,4 +275,43 @@ p + p2
 
 ```
 
+```{r, fig.width=14, fig.height=6}
 
+p <- ggplot(taba, aes(EV1, EV2)) +
+  geom_point(aes(colour = factor(Country_group)), alpha =0.6, shape=19) +
+  #scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p2 <- ggplot(taba, aes(EV1, EV3)) +
+  geom_point(aes(colour = factor(Country_group)), alpha =0.6, shape=19) +
+  #scale_color_manual(values=c("red", pal[1], pal[10], "grey", cal[1], cal[2], cal[3], cal[20], cal[19], cal[18], cal[17], cal[16], il[7], il[5], il[3], "blue", "black", "white")) +
+  ylab("Eigenvalue 2 (3.90%)") +
+  xlab("Eigenvalue 1 (4.99%)") +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+
+
+p + p2
+```

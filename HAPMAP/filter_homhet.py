@@ -11,7 +11,7 @@ import os
 hwe_file = sys.argv[1]
 threshold = sys.argv[2]
 
-monomorphic = list()
+exclude= list()
 
 with open(hwe_file) as h:
     next(h)
@@ -20,10 +20,17 @@ with open(hwe_file) as h:
         chromosome = b[0]
         position = b[1]
         alleles = b[2].split("/")
+        expected = b[3].split("/")[1] 
+        
         total = int(alleles[0]) + int(alleles[1]) + int(alleles[2])      
         percentage = (int(alleles[1])*100)/total
-        if (alleles[1] == "0" and alleles[2] == "0" or percentage > int(threshold)):
-            coordinate = chromosome+"_"+position
-            monomorphic.append(coordinate)
-
-print ("\n".join(monomorphic))
+        
+        if (int(alleles[0]) >= int(alleles[2]) and  percentage > int(threshold) or int(alleles[2]) > int(alleles[1]) ):
+            F = 1- (int(alleles[1])/float(expected))
+            coordinate = chromosome+"\t"+position+"\t"+str(F)
+            print (coordinate)
+        
+        elif(percentage > int(threshold) and int(alleles[1]) > int(alleles[1])):
+            F = 1- (int(alleles[1])/float(expected))
+            coordinate = chromosome+"\t"+float(position)+"\t"+str(F)
+            print (coordinate)

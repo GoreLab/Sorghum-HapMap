@@ -24,6 +24,10 @@ Calculates principal component analysis on the marker matrix using SNPrelate. Pl
 
 ## Evolutionary model:
 
+Recombination rates.-
+
+Genetic diversity (\pi).-
+
 ## Plots: 
 (CIRCOS and ... folders)
 

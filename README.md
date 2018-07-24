@@ -26,7 +26,8 @@ Calculates principal component analysis on the marker matrix using SNPrelate. Pl
 
 Recombination rates.-
 
-Genetic diversity (\pi).-
+Genetic diversity (Pi).-
+
 
 ## Plots: 
 (CIRCOS and ... folders)

@@ -25,6 +25,9 @@ Calculates principal component analysis on the marker matrix using SNPrelate. Pl
 ## Evolutionary model:
 
 Recombination rates.-
+*FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
+*FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file
+*Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
 
 Genetic diversity (Pi).-
 

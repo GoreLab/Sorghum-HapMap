@@ -1,0 +1,96 @@
+---
+title: "Recombination rates"
+output: html_notebook
+---
+
+
+
+
+```{r, fig.width=9, fig.height=4}
+
+library(ggplot2)
+library(wesanderson)
+
+rho_table <- as.data.frame(matrix(nrow = 0, ncol = 4)) %>%
+  set_colnames(c("Position", "genes", "chr", "rho"))
+
+
+for (i in 1:10) {
+  variable1 <- paste("/home/MENDEL/Sorghum/Evol_model/Recombination/Step3_output/graph_with_gene_density/rho", i, sep = "")
+  variable2 <- paste("/home/MENDEL/Sorghum/Evol_model/Recombination/Step3_output/graph_with_gene_density/chr", i, sep = "")
+  variable3 <- paste("chr", i, sep = "")
+  tmp <- read.delim(variable1, header = F, sep = " ") %>% set_colnames(c("Position", "rho"))
+  
+  tmp2 <- read.delim(variable2, header = F) %>% set_colnames(c("Position", "genes")) %>%
+  mutate(chr = variable3) %>%
+  left_join(tmp, by ="Position" )
+  
+  rho_table <- rbind(rho_table, tmp2)
+  
+}
+
+
+write.table(x = rho_table, file = "/home/rjl278/workdir/table_rho.txt", sep = "\t", quote = F, row.names = F)
+
+den5 <- rho_table %>%
+  filter(chr == "chr5")
+
+col <- wes_palette("Chevalier1")
+
+joined <- den5 %>% ggplot() + 
+  geom_point(mapping =  aes(x = Position, y = rho), alpha =0.5, shape=19, color=col[1]) +
+  geom_bar(mapping = aes(x = Position, y = genes *2.5 ), stat = "identity", alpha =0.5, fill=col[2]) +
+  geom_smooth(method = loess, mapping = aes(x = Position, y = rho), color= col[4], fill=col[3] ) +
+  scale_y_continuous(name = expression("Rho"), sec.axis = sec_axis(~ . * 2/5 , name = "# Genes/100kb")) +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "white"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+joined
+
+
+
+
+
+
+```
+
+```{r, fig.width=10, fig.height=4}
+
+den1 <- rho_table %>%
+  filter(chr == "chr1")
+
+col <- wes_palette("Chevalier1")
+
+joined <- den1 %>% ggplot() + 
+  geom_point(mapping =  aes(x = Position, y = rho), alpha =0.5, shape=19, color=col[1]) +
+  geom_bar(mapping = aes(x = Position, y = genes *2.5 ), stat = "identity", alpha =0.5, fill=col[2]) +
+  geom_smooth(method = loess, mapping = aes(x = Position, y = rho), color= col[4], fill=col[3] ) +
+  scale_y_continuous(name = expression("Rho"), sec.axis = sec_axis(~ . * 2/5 , name = "# Genes/100kb")) +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "white"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+joined
+
+
+
+```
+
+

@@ -1,0 +1,138 @@
+---
+title: "Linkage disequilibrium"
+output: html_notebook
+---
+
+# Linkage disequilibrium patterns in Sorghum
+
+```{r}
+library(tidyr)
+library(magrittr)
+library(dplyr) 
+library(ggplot2)
+library(wesanderson)
+library(patchwork)
+```
+
+## LD score plots
+
+```{r, fig.height=4, fig.width=12}
+
+LDscore <- read.delim("/home/MENDEL/Sorghum/Evol_model/LD/LDscore/LDscore.100k.score.ld", sep = " ")
+
+LDscore_r <- LDscore[,-(4:7)]
+mean_LD <- LDscore[,-c(4,6:8)]
+colnames(LDscore_r) <- c("SNP","CHR", "BP", "ldscore")
+colnames(mean_LD) <- c("SNP","CHR", "BP", "ldscore")
+
+
+# Plotting total LD score not controlling for number of SNPs per window
+
+library(qqman)
+manhattan(LDscore_r, p = "ldscore", logp = FALSE, ylab = "LDscore", genomewideline = FALSE, col = c("dodgerblue4", "forestgreen"), cex=0.3,
+    suggestiveline = FALSE, main = "LDscores")
+
+
+```
+
+## Mean LD score plot (Fig 1C)
+
+```{r,fig.height= 3, fig.width=7}
+
+
+library(wesanderson)
+wes <- wes_palette("Cavalcanti1")
+
+tiff("/home/rjl278/workdir/LDscore.tiff", width = 7, height = 3, units = 'in', res = 450 )
+LDplot <- manhattan(mean_LD, p = "ldscore", logp = FALSE, ylab = "Mean LDscore", genomewideline = FALSE, col = alpha(wes, 0.2), cex=0.15, suggestiveline = FALSE,  cex.axis = 0.9, cex.lab = 0.9, ylim=c(0, 0.4))
+dev.off()
+
+
+# Plotting mean LD scores
+LDplot <- manhattan(mean_LD, p = "ldscore", logp = FALSE, ylab = "Mean LDscore", genomewideline = FALSE, col = alpha(wes, 0.2), cex=0.15, suggestiveline = FALSE,  cex.axis = 0.9, cex.lab = 0.9, ylim=c(0, 0.4) )
+
+```
+
+## LD decay plot (Fig 1B)
+Plottin the output of running POPLDDECAY (https://github.com/BGI-shenzhen/PopLDdecay)
+
+```{r, fig.height=3, fig.width=3.42}
+
+LDdecay<- read.delim("/home/roberto/Sorghum/Evol_model/LD/Final/LD_485.stat/TERRA485_LDdecay", header = T)
+colnames(LDdecay) <- c("Position", "LD")
+
+p <- ggplot(data=LDdecay, aes(x=Position/1000, y=LD)) +
+  geom_line(aes(group=1), colour=wes[1]) +
+  geom_hline(yintercept=0.1, linetype="dashed", color = wes[2]) +
+  ylim(0,0.7) +
+  xlim(0,500) +
+  ylab(bquote('Correlation coefficient ('*r^2*')')) +
+  xlab("Distance (Kb)") +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "grey88"),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+
+p
+ggsave("/home/rjl278/workdir/LDdecay.tiff", plot= p, device = "tiff", scale = 1, width = 3.42, height = 3, units = c("in"),dpi = 500, limitsize = TRUE)
+
+Graph
+
+```
+
+
+
+
+```{r}
+
+Caudatum  <- read.delim("/home/roberto/Sorghum/Evol_model/LD/Final/LD_caudatum.stat", header = T) %>%
+  mutate(Race="Caudatum")
+Durra     <- read.delim("/home/roberto/Sorghum/Evol_model/LD/Final/LD_durra.stat", header = T) %>%
+  mutate(Race="Durra")
+Kafir     <- read.delim("/home/roberto/Sorghum/Evol_model/LD/Final/LD_kafir.stat", header = T) %>%
+  mutate(Race="Kafir")
+Guinea     <- read.delim("/home/roberto/Sorghum/Evol_model/LD/Final/LD_guinea.stat", header = T) %>%
+  mutate(Race="Guinea")
+
+Tabla <- rbind(Caudatum, Durra, Kafir, Guinea) %>%
+  select(X.Dist, Mean_r.2,Race) %>%
+  `colnames<-`(c("Position", "LD", "Race"))
+
+
+p <- ggplot(data=Tabla, aes(x=Position/1000, y=LD, group=Race)) +
+  geom_line(aes(color=Race)) +
+  geom_hline(yintercept=0.1, linetype="dashed", color = wes[2]) +
+  ylim(0,0.7) +
+  xlim(0,500) +
+  ylab(bquote('Correlation coefficient ('*r^2*')')) +
+  xlab("Distance (Kb)") +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "grey88"),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white"))
+
+p
+
+ggsave("/home/roberto/Sorghum/Figures/", plot= p, device = "png", scale = 1, width = 3.42, height = 3, units = c("in"),dpi = 500, limitsize = TRUE)
+
+
+```
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

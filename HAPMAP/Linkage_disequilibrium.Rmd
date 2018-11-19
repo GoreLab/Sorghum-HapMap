@@ -87,7 +87,7 @@ Graph
 ```
 
 
-
+## LD decay plot per population
 
 ```{r}
 
@@ -124,7 +124,7 @@ p <- ggplot(data=Tabla, aes(x=Position/1000, y=LD, group=Race)) +
 
 p
 
-ggsave("/home/roberto/Sorghum/Figures/", plot= p, device = "png", scale = 1, width = 3.42, height = 3, units = c("in"),dpi = 500, limitsize = TRUE)
+ggsave("/home/roberto/Sorghum/Figures/FigS6.png", plot= p, device = "png", scale = 1, width = 9, height = 4, units = c("in"),dpi = 150, limitsize = TRUE)
 
 
 ```

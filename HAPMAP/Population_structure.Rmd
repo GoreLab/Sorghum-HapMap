@@ -104,7 +104,9 @@ p2 <- ggplot(taba, aes(EV1,EV3)) +
         axis.text.y=element_text(colour="black", size = 10),
         legend.key=element_rect(fill="white", colour="white"))
 
-p1 + p2
+S5 <- p1 + p2
+
+ggsave("/workdir/Sorghum/Figures/FigS5A.png", plot=S5, device = "png", scale = 1, width = 10, height = 4, units = c("in"),dpi = 200, limitsize = TRUE)
 
 ```
 
@@ -146,8 +148,10 @@ p2 <- ggplot(taba, aes(EV1, EV3)) +
         axis.text.y=element_text(colour="black", size = 10),
         legend.key=element_rect(fill="white", colour="white"))
 
-library(patchwork)
-p + p2
+S5B <- p + p2
+
+ggsave("/workdir/Sorghum/Figures/FigS5B.png", plot=S5B, device = "png", scale = 1, width = 10, height = 4, units = c("in"),dpi = 200, limitsize = TRUE)
+
 
 ```
 

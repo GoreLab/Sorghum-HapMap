@@ -1,0 +1,98 @@
+---
+title: "MAF per population"
+output: html_notebook
+---
+
+# Allele frequency spectrum 
+
+```{r}
+
+
+library(ggplot2)
+library(ggridges)
+
+caudatum <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/caudatum.hist", header = F) %>%
+  `colnames<-`(c("val")) %>%
+  mutate(Race="caudatum")
+durra <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/durra.hist", header = F) %>%
+ `colnames<-`(c("val")) %>%
+  mutate(Race="durra")
+kafir <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/kafir.hist", header = F) %>%
+ `colnames<-`(c("val")) %>%
+  mutate(Race="kafir")
+guinea <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/guinea.hist", header = F) %>%
+   `colnames<-`(c("val")) %>%
+  mutate(Race="guinea")
+
+ready <- rbind(caudatum, durra, kafir, guinea)
+
+
+
+ridge <- ggplot(ready, aes(x = val, y = Race, fill=Race)) + geom_density_ridges() +
+  theme_ridges(grid = FALSE, center_axis_labels = TRUE) +
+  xlab("Reference allele frequency") +
+  ylab("")
+
+ggsave("/home/roberto/Sorghum/Figures/FigS6B", plot= ridge, device = "png", scale = 1, width = 6, height = 3, units = c("in"),dpi = 200, limitsize = TRUE)
+
+```
+
+
+# FST
+
+```{r}
+
+library(gdsfmt)
+library(SNPRelate)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+
+# Get the path of the plink files
+bed.fn <- "/home/roberto/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.bed"
+fam.fn <- "/home/roberto/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.fam"
+bim.fn <- "/home/roberto/Sorghum/WGS/VCF_2.0/PCA/TERRA_remover.bim"
+
+# Build the gdsdb
+snpgdsBED2GDS(bed.fn, fam.fn, bim.fn,out.gdsfn ="fst.gds")
+snpgdsSummary("fst2.gds")
+genofile <- snpgdsOpen("fst.gds")
+
+
+caudatum <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/caudatum", header = F) %>%
+  `colnames<-`(c("ID", "tmp")) %>%
+  mutate(Race="caudatum") %>%
+  select(-tmp)
+kafir <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/kafir", header = F) %>%
+  `colnames<-`(c("ID", "tmp")) %>%
+  mutate(Race="kafir") %>%
+  select(-tmp)
+durra <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/durra", header = F) %>%
+  `colnames<-`(c("ID", "tmp")) %>%
+  mutate(Race="durra") %>%
+  select(-tmp)
+guinea <- read.delim("/home/roberto/Sorghum/Evol_model/LD/MAF/guinea", header = F) %>%
+  `colnames<-`(c("ID", "tmp")) %>%
+  mutate(Race="guinea") %>%
+  select(-tmp) %>%
+  filter(ID != "PI660565")
+
+
+
+multi  <- rbind(guinea, caudatum)
+id     <- as.character(multi$ID)
+pop    <- multi$Race
+
+snpgdsFst(genofile, sample.id=id, population=as.factor(pop), method="W&C84")
+
+
+```
+
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

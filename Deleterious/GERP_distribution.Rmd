@@ -1,0 +1,64 @@
+---
+title: "GERP histograms"
+output: html_notebook
+---
+
+# GERP Histogram considering all positions 
+
+```{r}
+
+chromosome1  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.1.msa.in.rates.full", header = F)
+chromosome2  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.2.msa.in.rates.full", header = F)
+chromosome3  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.3.msa.in.rates.full", header = F)
+chromosome4  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.4.msa.in.rates.full", header = F)
+chromosome5  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.5.msa.in.rates.full", header = F)
+chromosome6  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.6.msa.in.rates.full", header = F)
+chromosome7  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.7.msa.in.rates.full", header = F)
+chromosome8  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.8.msa.in.rates.full", header = F)
+chromosome9  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.9.msa.in.rates.full", header = F)
+chromosome10 <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/roast.chrom.10.msa.in.rates.full", header = F)
+
+new <- rbind(chromosome1, chromosome2, chromosome3, chromosome4, chromosome5, chromosome6, chromosome7, chromosome8, chromosome9, chromosome10)
+
+rm(chromosome1)
+rm(chromosome2)
+rm(chromosome3)
+rm(chromosome4)
+rm(chromosome5)
+rm(chromosome6)
+rm(chromosome7)
+rm(chromosome8)
+rm(chromosome9)
+rm(chromosome10)
+
+hist(new$V2, ylab = "number of sites", xlab = "GERP scores", main = "GERP score distribution")
+
+```
+
+# GERP Histogram considering only positions inside CDS 
+
+```{r}
+
+GERP_CDS  <- read.delim("/home/roberto/Sorghum/Evol_model/Elodie/tau_SIFT_GERP_infiles/GERP_scores/input_data/GERP_CDS.short", header = F)
+hist(GERP_CDS$V2, ylab = "number of sites", xlab = "GERP scores", main = "GERP score distribution inside CDS")
+
+```
+
+
+# How many nucleotides are constrained?
+
+```{r}
+
+constrained <- new %>%
+  filter(V2 > 0)
+
+CDSconstrained <- GERP_CDS %>%
+  filter(V2 > 0)
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

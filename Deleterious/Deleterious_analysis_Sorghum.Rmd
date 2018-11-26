@@ -1,0 +1,641 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Derived Allele Frequencies (DAF)
+
+```{r, fig.width=10, fig.height=4}
+
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(ggplot2)
+
+
+daf <- read.delim( file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+  mutate(Class = case_when(DAF_p >= 0.65 & Ref_count > Alt_count ~ "Ancestral",
+                          DAF_p >= 0.65 & Alt_count > Ref_count ~ "Derived",
+                          DAF_p <=0.35 & Ref_count > Alt_count ~ "Derived",
+                          DAF_p <=0.35 & Alt_count > Ref_count ~ "Ancestral",
+                          DAF_p <0.65 & DAF_p > 0.35 ~ "NA") ) %>%
+  mutate(DAF = case_when(Class == "Ancestral" ~ MAF,
+                         Class == "Derived" ~ 1-MAF) ) %>%
+  select(DAF, SET) %>%
+  na.omit(DAF)
+
+
+#######  Deleterious.-
+
+del <- daf
+del$bins <- cut(del$DAF, breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1), 
+                labels=c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")) 
+del <- del %>%
+  filter(SET == "Deleterious")
+
+de2m            <- as.data.frame(matrix(nrow = 20, ncol = 3,0))
+colnames(de2m)  <- c("SET", "Proportion", "DAF_group")
+de2m$SET        <- "Deleterious"
+de2m$Proportion <- prop.table(table(del$bins))
+de2m$DAF_group  <- c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")
+
+#######  Deleterios_nc.-
+
+delnc <- daf
+delnc$bins <- cut(delnc$DAF, breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1), 
+                labels=c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")) 
+delnc <- delnc %>%
+  filter(SET == "Deleterious_nc")
+
+denc2m            <- as.data.frame(matrix(nrow = 20, ncol = 3,0))
+colnames(denc2m)  <- c("SET", "Proportion", "DAF_group")
+denc2m$SET        <- "Deleterious_nc"
+denc2m$Proportion <- prop.table(table(delnc$bins))
+denc2m$DAF_group  <- c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")
+
+#######  STOP .-
+
+sto <- daf
+sto$bins <- cut(sto$DAF, breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1), 
+                labels=c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")) 
+sto <- sto %>%
+  filter(SET == "Stops")
+
+sto2m            <- as.data.frame(matrix(nrow = 20, ncol = 3,0))
+colnames(sto2m)  <- c("SET", "Proportion", "DAF_group")
+sto2m$SET        <- "Stops"
+sto2m$Proportion <- prop.table(table(sto$bins))
+sto2m$DAF_group  <- c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")
+
+
+#######  Tolerant.-
+
+tol <- daf
+tol$bins <- cut(tol$DAF, breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1), 
+                labels=c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")) 
+tol <- tol %>%
+  filter(SET == "Tolerated")
+
+tol2m            <- as.data.frame(matrix(nrow = 20, ncol = 3,0))
+colnames(tol2m)  <- c("SET", "Proportion", "DAF_group")
+tol2m$SET        <- "Tolerated"
+tol2m$Proportion <- prop.table(table(tol$bins))
+tol2m$DAF_group  <- c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")
+
+#######  Synonymous.-
+
+syn <- daf
+syn$bins <- cut(syn$DAF, breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1), 
+                labels=c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")) 
+syn <- syn %>%
+  filter(SET == "Synonymous")
+
+syn2m            <- as.data.frame(matrix(nrow = 20, ncol = 3,0))
+colnames(syn2m)  <- c("SET", "Proportion", "DAF_group")
+syn2m$SET        <- "Synonymous"
+syn2m$Proportion <- prop.table(table(syn$bins))
+syn2m$DAF_group  <- c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20")
+
+
+## MERGE THE DATA:
+
+merged <- rbind(de2m, denc2m, sto2m, tol2m, syn2m)
+merged <- merged%>%
+  mutate(YYY = case_when (DAF_group == "1" ~ "0.00-0.05",
+                          DAF_group == "2" ~ "0.05-0.10",
+                          DAF_group == "3" ~ "0.10-0.15",
+                          DAF_group == "4" ~ "0.15-0.20",
+                          DAF_group == "5" ~ "0.20-0.25",
+                          DAF_group == "6" ~ "0.25-0.30",
+                          DAF_group == "7" ~ "0.30-0.35",
+                          DAF_group == "8" ~ "0.35-0.40",
+                          DAF_group == "9" ~ "0.40-0.45",
+                          DAF_group == "10" ~ "0.45-0.50",
+                          DAF_group == "11" ~ "0.50-0.55",
+                          DAF_group == "12" ~ "0.55-0.60",
+                          DAF_group == "13" ~ "0.60-0.65",
+                          DAF_group == "14" ~ "0.65-0.70",
+                          DAF_group == "15" ~ "0.70-0.75",
+                          DAF_group == "16" ~ "0.75-0.80",
+                          DAF_group == "17" ~ "0.80-0.85",
+                          DAF_group == "18" ~ "0.85-0.90",
+                          DAF_group == "19" ~ "0.90-0.95",
+                          DAF_group == "20" ~ "0.95-1.00") )
+
+
+
+merged$DAF_group <- as.factor(merged$DAF_group)
+levels(merged$DAF_group)
+merged$DAF_group <- factor(merged$DAF_group, levels = c("1","2","3", "4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"))
+
+## PLOT
+
+library(wesanderson)
+library(ggplot2)
+wes =wes_palette("Cavalcanti1")
+weso = c(wes[1],wes[2],wes[5],wes[3],wes[4])
+
+
+Graph <- ggplot(data=merged, aes(x=YYY, y=Proportion, fill=SET)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  ylab("Proportion of SNPs") +
+  xlab("Derived allele frequencies (DAF)") +
+  scale_fill_manual(values=weso)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(face="bold", size=9, angle=90)) +
+  guides(fill=guide_legend(title=""))
+
+Graph 
+
+ggsave("/home/roberto/Sorghum/Figures/Fig2.png", plot= Graph, device = "png", scale = 1, width = 9, height = 4, units = c("in"),dpi = 550, limitsize = TRUE)
+
+
+```
+
+#Synteny SORGHUM
+
+```{r, fig.height=5, fig.width=4}
+
+Synteny <- read.delim( file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T, stringsAsFactors = FALSE) %>%
+  select(SET, Group)
+
+
+Non_fractioned <- rename(count(Synteny, SET, Group), Freq = n) %>% 
+  filter(Group == "Non_fractioned") %>%
+  mutate(Percentage = Freq/sum(Freq))
+Fractioned <- rename(count(Synteny, SET, Group), Freq = n) %>% 
+  filter(Group == "Fractioned") %>%
+  mutate(Percentage = Freq/sum(Freq))
+NonSyntenic <- rename(count(Synteny, SET, Group), Freq = n) %>% 
+  filter(Group == "Sorghum_only") %>%
+  mutate(Percentage = Freq/sum(Freq))
+  
+Merged <- rbind(Non_fractioned, Fractioned, NonSyntenic) %>%
+  mutate(Group = replace(Group, Group == "Sorghum_only", "NonSyntenic")) %>%
+  mutate(Group = replace(Group, Group == "Non_fractioned", "NonFractioned"))
+
+
+wes =wes_palette("Cavalcanti1")
+weso = c(wes[1],wes[2],wes[5],wes[3],wes[4])
+
+Sorghum_del <- ggplot() + theme_bw() +
+  geom_bar(aes(y = Percentage, x = Group, fill = SET), data = Merged, stat="identity", width = 0.7) +
+  theme(legend.position="none", legend.direction="horizontal",
+        legend.title = element_blank()) +
+  scale_fill_manual(values=weso) +
+  xlab("")
+  
+Sorghum_del
+
+```
+
+#Synteny MAIZE
+
+```{r, fig.height=5, fig.width=4}
+
+GERP <- read.delim(file = "/home/roberto/Maize/Comparative_Hapmap/DEL/GERP.ready", header = F, stringsAsFactors = FALSE) %>%
+  `colnames<-`(c("link", "GERP"))
+SIFT <- read.delim(file = "/home/roberto/Maize/Comparative_Hapmap/DEL/SIFT_unix.noalternates", stringsAsFactors = FALSE)%>%
+  rename(link = CHROM_POS) %>%
+  left_join(GERP, by="link")
+
+head(SIFT)
+#########################################################################################
+
+deleterious <- SIFT %>%
+  filter(as.numeric(as.character(SIFT_SCORE)) <= 0.05 & GERP >= 2) %>%
+  mutate(CLASS = "deleterious")
+
+deleterious_nc <- SIFT %>%
+  filter(as.numeric(as.character(SIFT_SCORE)) <= 0.05 & GERP < 2) %>%
+  mutate(CLASS = "deleterious_nc")
+
+stops <- SIFT %>%
+  filter(VARIANT_TYPE == "STOP-GAIN" | VARIANT_TYPE == "STOP-LOSS") %>%
+  mutate(CLASS = "stops")
+
+tolerated <- SIFT %>%
+  filter(VARIANT_TYPE == "NONSYNONYMOUS" & SIFT_PREDICTION =="TOLERATED" ) %>%
+  mutate(CLASS = "tolerated")
+
+synonymous <- SIFT %>%
+  filter(VARIANT_TYPE == "SYNONYMOUS" ) %>%
+  mutate(CLASS = "synonymous")
+
+
+
+#########################################################################################  
+
+fracs <- read.delim("/home/roberto/Maize/Comparative_Hapmap/DEL/Maize.fractionation", header = T, stringsAsFactors = FALSE)
+
+joined <- rbind(deleterious, deleterious_nc, stops, tolerated, synonymous) %>%
+  left_join(fracs, by="TRANSCRIPT_ID")
+
+save(joined, file= "/home/roberto/docker/Maize.joined_2.Rdata")
+#load("/home/roberto/docker/Maize.joined.Rdata")
+
+
+Panaliza <- joined %>%
+  select(CLASS, FRAC) %>%
+  rename(SET=CLASS) %>%
+  rename(Group=FRAC)
+
+Non_fractioned <- rename(count(Panaliza, SET, Group), Freq = n) %>% 
+  filter(Group == "NonFractioned") %>%
+  mutate(Percentage = Freq/sum(Freq))
+Fractioned <- rename(count(Panaliza, SET, Group), Freq = n) %>% 
+  filter(Group == "Fractioned") %>%
+  mutate(Percentage = Freq/sum(Freq))
+NonSyntenic <- rename(count(Panaliza, SET, Group), Freq = n) %>% 
+  filter(Group == "NS") %>%
+  mutate(Percentage = Freq/sum(Freq))
+  
+Merged <- rbind(Non_fractioned, Fractioned, NonSyntenic) %>%
+  mutate(Group = replace(Group, Group == "NS", "NonSyntenic"))
+
+
+wes =wes_palette("Cavalcanti1")
+weso = c(wes[1],wes[2],wes[5],wes[3],wes[4])
+
+Maize_del <- ggplot() + theme_bw() +
+  geom_bar(aes(y = Percentage, x = Group, fill = SET), data = Merged, stat="identity", width = 0.7) +
+  theme(legend.position="none", legend.direction="horizontal",
+        legend.title = element_blank()) +
+  scale_fill_manual(values=weso) +
+  xlab("") + 
+  ylab("")
+  
+Maize_del
+
+
+
+```
+
+#Joining Maize and Sorghum
+
+```{r, fig.width= 9, fig.height=6}
+
+Merged <- Graph + (Sorghum_del + Maize_del) + plot_layout(ncol = 1)  
+
+ggsave("/home/roberto/Sorghum/Figures/Fig2_full.png", plot= Merged, device = "png", scale = 1, width = 9, height = 5.5, units = c("in"),dpi = 750, limitsize = TRUE)
+
+```
+
+#BURDEN
+
+
+```{r, fig.width=10, fig.height=4}
+
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(ggplot2)
+
+
+deleterious <- read.delim( file = "/src/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+  mutate(Class = case_when(DAF_p >= 0.65 & Ref_count > Alt_count ~ "Ancestral",
+                          DAF_p >= 0.65 & Alt_count > Ref_count ~ "Derived",
+                          DAF_p <=0.35 & Ref_count > Alt_count ~ "Derived",
+                          DAF_p <=0.35 & Alt_count > Ref_count ~ "Ancestral",
+                          DAF_p <0.65 & DAF_p > 0.35 ~ "NA") ) %>%
+  mutate(DAF = case_when(Class == "Ancestral" ~ MAF,
+                         Class == "Derived" ~ 1-MAF) ) %>%
+  select(Chr, Position, SET, Class) %>%
+  filter(SET != "Synonymous") %>%
+  filter(SET != "Tolerated") %>%
+  na.omit(Class)
+
+
+del <- deleterious %>%
+  filter(Class != "NA")
+
+write.table(x = del, file = "/src/docker/burden.table", sep = "\t", row.names = FALSE, quote = F )
+
+```
+
+## Merging del info with dosage file (there are 1k markers that were not found in the vcf)
+
+```{r}
+
+info <- read.delim("/src/Sorghum/Evol_model/Burden/newburden.table2") %>%
+  select(CHR_POS, SET, Class)
+
+markers <- read.delim("/src/Sorghum/Evol_model/Burden/Dosage.superready") %>%
+  select(CHR_POS, COUNTED, ALT) %>%
+  inner_join(info, by="CHR_POS")
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header", header = F) 
+
+matriz <- read.delim("/src/Sorghum/Evol_model/Burden/Dosage.superready") %>%
+  select(-COUNTED, -ALT) %>%
+  `colnames<-`(header[,1])
+  
+Master <- markers %>%
+  inner_join(matriz, by="CHR_POS")
+
+save(Master, file = "/src/docker/Burden_master2.Rdata")
+
+```
+
+
+
+```{r}
+
+load("/src/docker/Burden_master.Rdata")
+
+derivao <- Master %>%
+  filter(Class == "Derived")
+
+for (i in 6:490){
+  derivao[,i][derivao[,i] == 0] <- "zero"
+  derivao[,i][derivao[,i] == 2] <- "two"
+}
+
+for (i in 6:490){
+  derivao[,i][derivao[,i] == "zero"] <- "2"
+  derivao[,i][derivao[,i] == "two"] <- "0"
+}
+  
+
+##
+ancestral <- Master %>%
+  filter(Class == "Ancestral") 
+
+
+Ready <- rbind(ancestral, derivao)
+Master <- Ready
+
+
+
+```
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 6:490){
+  a <- as.numeric(table(Master[,i]))
+  b <- a[3]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10)) +
+  ylim(0,0.13)
+p
+
+```
+
+#### 
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+library(wesanderson)
+library(scales)
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 6:490){
+  a <- as.numeric(table(Master[,i]))
+  b <- a[3]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10)) +
+  ylim(0,0.13)
+p
+
+```
+
+
+
+
+
+
+
+```{r,fig.width=12, fig.height=4}
+
+#Calculating different burden levels
+
+Ready_del <- Master %>%
+  filter(SET == "Deleterious")
+
+
+Ready_del[1:5, 1:5]
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 6:490){
+  a <- table(Ready_del[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10))
+p
+
+
+```
+
+
+
+
+```{r}
+
+#Calculating different burden levels
+
+Ready_del <- Master %>%
+  filter(SET == "Deleterious")
+
+
+Ready_del[1:5, 1:5]
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 6:490){
+  a <- table(Ready_del[,i])
+  b <- a["1"]/sum(a)
+  valores <- c(valores, b)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, color=Race)) +
+  geom_boxplot()
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10))
+p
+
+
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(scales)
+library(wesanderson)
+#Calculating different burden levels
+
+Ready_del <- Master %>%
+  filter(SET == "Deleterious")
+
+
+header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 6:490){
+  a <- table(Ready_del[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/src/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10))
+
+p
+
+```
+
+
+
+
+
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

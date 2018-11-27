@@ -147,7 +147,7 @@ Graph <- ggplot(data=merged, aes(x=YYY, y=Proportion, fill=SET)) +
 
 Graph 
 
-ggsave("/home/roberto/Sorghum/Figures/Fig2.png", plot= Graph, device = "png", scale = 1, width = 9, height = 4, units = c("in"),dpi = 550, limitsize = TRUE)
+#ggsave("/home/roberto/Sorghum/Figures/Fig2.png", plot= Graph, device = "png", scale = 1, width = 9, height = 4, units = c("in"),dpi = 550, limitsize = TRUE)
 
 
 ```
@@ -281,6 +281,19 @@ ggsave("/home/roberto/Sorghum/Figures/Fig2_full.png", plot= Merged, device = "pn
 
 ```
 
+# Getting some stats
+
+
+```{r}
+
+Synteny <- read.delim( file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T, stringsAsFactors = FALSE) 
+
+NS <- Synteny %>%
+  filter(Type=="NONSYNONYMOUS")  %>%
+  filter(SIFT_score < 0.05)
+
+```
+
 #BURDEN
 
 
@@ -292,7 +305,7 @@ library(tidyr)
 library(ggplot2)
 
 
-deleterious <- read.delim( file = "/src/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+deleterious <- read.delim( file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
   mutate(Class = case_when(DAF_p >= 0.65 & Ref_count > Alt_count ~ "Ancestral",
                           DAF_p >= 0.65 & Alt_count > Ref_count ~ "Derived",
                           DAF_p <=0.35 & Ref_count > Alt_count ~ "Derived",
@@ -300,7 +313,7 @@ deleterious <- read.delim( file = "/src/Sorghum/Evol_model/Derived_alleles/split
                           DAF_p <0.65 & DAF_p > 0.35 ~ "NA") ) %>%
   mutate(DAF = case_when(Class == "Ancestral" ~ MAF,
                          Class == "Derived" ~ 1-MAF) ) %>%
-  select(Chr, Position, SET, Class) %>%
+  select(Chr, Position, SET, Class, MAF) %>%
   filter(SET != "Synonymous") %>%
   filter(SET != "Tolerated") %>%
   na.omit(Class)
@@ -309,49 +322,223 @@ deleterious <- read.delim( file = "/src/Sorghum/Evol_model/Derived_alleles/split
 del <- deleterious %>%
   filter(Class != "NA")
 
-write.table(x = del, file = "/src/docker/burden.table", sep = "\t", row.names = FALSE, quote = F )
+write.table(x = del, file = "/home/roberto/Sorghum/Evol_model/Burden/burden_manuscript.table", sep = "\t", row.names = FALSE, quote = F )
 
 ```
 
-## Merging del info with dosage file (there are 1k markers that were not found in the vcf)
+## Merging del info with dosage file 
 
 ```{r}
 
-info <- read.delim("/src/Sorghum/Evol_model/Burden/newburden.table2") %>%
-  select(CHR_POS, SET, Class)
+info <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/burden_manuscript_ready.table") %>%
+  select(CHR_POS, SET, Class, MAF)
 
-markers <- read.delim("/src/Sorghum/Evol_model/Burden/Dosage.superready") %>%
+markers <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/Dosage.superready") %>%
   select(CHR_POS, COUNTED, ALT) %>%
   inner_join(info, by="CHR_POS")
 
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header", header = F) 
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header", header = F) 
 
-matriz <- read.delim("/src/Sorghum/Evol_model/Burden/Dosage.superready") %>%
+matriz <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/Dosage.superready") %>%
   select(-COUNTED, -ALT) %>%
   `colnames<-`(header[,1])
   
 Master <- markers %>%
   inner_join(matriz, by="CHR_POS")
 
-save(Master, file = "/src/docker/Burden_master2.Rdata")
+save(Master, file = "/home/roberto/Sorghum/Evol_model/Burden/Burden_master_manuscript.Rdata")
+load("/home/roberto/Sorghum/Evol_model/Burden/Burden_master_manuscript.Rdata")
 
 ```
 
 
 
+
+## Deleterious alleles as minor alleles
+
 ```{r}
 
-load("/src/docker/Burden_master.Rdata")
+#Calculating different burden levels
+library(ggplot2)
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(Master[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  ylim(0,0.13)
+p
+
+
+
+
+```
+
+## Modifying MAF < 0.05
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+library(wesanderson)
+library(scales)
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+littlemaster <- Master %>%
+  filter(MAF >0.03)
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(littlemaster[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) 
+  #ylim(0,0.1)
+p
+
+```
+
+## Only deleterious with GERP > 2
+
+```{r,fig.width=8, fig.height=3}
+
+#Calculating different burden levels
+
+Ready_del <- Master %>%
+  filter(SET == "Deleterious")
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(Ready_del[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) 
+p
+
+
+```
+
+
+# BURDEN - Derived
+
+```{r}
+
+load("/home/roberto/Sorghum/Evol_model/Burden/Burden_master_manuscript.Rdata")
 
 derivao <- Master %>%
   filter(Class == "Derived")
 
-for (i in 6:490){
+for (i in 7:491){
   derivao[,i][derivao[,i] == 0] <- "zero"
   derivao[,i][derivao[,i] == 2] <- "two"
 }
 
-for (i in 6:490){
+for (i in 7:491){
   derivao[,i][derivao[,i] == "zero"] <- "2"
   derivao[,i][derivao[,i] == "two"] <- "0"
 }
@@ -363,18 +550,18 @@ ancestral <- Master %>%
 
 
 Ready <- rbind(ancestral, derivao)
-Master <- Ready
-
 
 
 ```
+
+## All deleterious alleles
 
 ```{r}
 
 #Calculating different burden levels
 library(ggplot2)
 
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
 
 burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
 burden_table[,1] <- header
@@ -382,15 +569,15 @@ colnames(burden_table) <- c("ID", "Burden")
 
 
 valores <- vector()
-for (i in 6:490){
-  a <- as.numeric(table(Master[,i]))
-  b <- a[3]/sum(a)
+for (i in 7:491){
+  a <- table(Ready[,i])
+  b <- a["2"]/sum(a)
   valores <- c(valores, b)
 }
 
 burden_table$Burden <- valores
 
-race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
   `colnames<-`(c("ID", "Race"))
 
 only_race <- race %>%
@@ -398,88 +585,40 @@ only_race <- race %>%
 
 
 pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
 
 p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
-  scale_fill_manual(values = pal)+
+  scale_fill_manual(values = colors)+
   theme(axis.line = element_line(size=1, colour = "black"),
         panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
         panel.border = element_blank(), panel.background = element_blank()) +
   #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.text.x=element_text(colour="black", size = 10),
-        axis.text.y=element_text(colour="black", size = 10)) +
-  ylim(0,0.13)
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) 
 p
+
+
+
 
 ```
 
-#### 
+## MAF > 0.05
 
-```{r}
-
-#Calculating different burden levels
-library(ggplot2)
-library(wesanderson)
-library(scales)
-
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
-
-burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
-burden_table[,1] <- header
-colnames(burden_table) <- c("ID", "Burden")
-
-
-valores <- vector()
-for (i in 6:490){
-  a <- as.numeric(table(Master[,i]))
-  b <- a[3]/sum(a)
-  valores <- c(valores, b)
-}
-
-burden_table$Burden <- valores
-
-race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
-  `colnames<-`(c("ID", "Race"))
-
-only_race <- race %>%
-  inner_join(burden_table, by="ID")
-
-
-pal <- wes_palette("FantasticFox1", 8, type = "continuous")
-
-p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal)+
-  theme(axis.line = element_line(size=1, colour = "black"),
-        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
-        panel.border = element_blank(), panel.background = element_blank()) +
-  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
-  theme(plot.title = element_text(size = 14, face = "bold"),
-        axis.text.x=element_text(colour="black", size = 10),
-        axis.text.y=element_text(colour="black", size = 10)) +
-  ylim(0,0.13)
-p
-
-```
-
-
-
-
-
-
-
-```{r,fig.width=12, fig.height=4}
+```{r,fig.width=6, fig.height=3}
 
 #Calculating different burden levels
 
 Ready_del <- Master %>%
-  filter(SET == "Deleterious")
+  filter(MAF > 0.05)
 
-
-Ready_del[1:5, 1:5]
-
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
 
 burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
 burden_table[,1] <- header
@@ -487,7 +626,62 @@ colnames(burden_table) <- c("ID", "Burden")
 
 
 valores <- vector()
-for (i in 6:490){
+for (i in 7:491){
+  a <- table(Ready_del[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) 
+p
+
+
+```
+
+# BURDEN LANDRACES/CULTIVATED/WW
+
+```{r}
+library(ggplot2)
+library(scales)
+library(wesanderson)
+#Calculating different burden levels
+
+Ready_del <- Master
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
   a <- table(Ready_del[,i])
   b <- a["2"]/sum(a)
   valores <- c(valores, b)
@@ -496,85 +690,42 @@ for (i in 6:490){
 
 burden_table$Burden <- valores
 
-race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
   `colnames<-`(c("ID", "Race"))
 
 only_race <- race %>%
-  inner_join(burden_table, by="ID")
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
 
 
-p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+
+
+Sorghum_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
-  scale_fill_manual(values = pal)+
+  scale_fill_manual(values = wesi)+
   theme(axis.line = element_line(size=1, colour = "black"),
         panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
         panel.border = element_blank(), panel.background = element_blank()) +
   #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.text.x=element_text(colour="black", size = 10),
-        axis.text.y=element_text(colour="black", size = 10))
-p
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank())
 
-
-```
-
-
-
-
-```{r}
-
-#Calculating different burden levels
-
-Ready_del <- Master %>%
-  filter(SET == "Deleterious")
-
-
-Ready_del[1:5, 1:5]
-
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
-
-burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
-burden_table[,1] <- header
-colnames(burden_table) <- c("ID", "Burden")
-
-
-valores <- vector()
-for (i in 6:490){
-  a <- table(Ready_del[,i])
-  b <- a["1"]/sum(a)
-  valores <- c(valores, b)
-}
-
-
-burden_table$Burden <- valores
-
-race <- read.delim("/src/Sorghum/Evol_model/Burden/race", header = F) %>%
-  `colnames<-`(c("ID", "Race"))
-
-only_race <- race %>%
-  inner_join(burden_table, by="ID")
-
-
-p<-ggplot(only_race, aes(x=Race, y=Burden, color=Race)) +
-  geom_boxplot()
-
-p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal)+
-  theme(axis.line = element_line(size=1, colour = "black"),
-        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
-        panel.border = element_blank(), panel.background = element_blank()) +
-  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
-  theme(plot.title = element_text(size = 14, face = "bold"),
-        axis.text.x=element_text(colour="black", size = 10),
-        axis.text.y=element_text(colour="black", size = 10))
-p
-
-
+Sorghum_burden
 
 ```
 
-
+## only del > 0.2
 
 ```{r}
 library(ggplot2)
@@ -586,7 +737,7 @@ Ready_del <- Master %>%
   filter(SET == "Deleterious")
 
 
-header <- read.delim("/src/Sorghum/Evol_model/Burden/header") 
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
 
 burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
 burden_table[,1] <- header
@@ -594,7 +745,7 @@ colnames(burden_table) <- c("ID", "Burden")
 
 
 valores <- vector()
-for (i in 6:490){
+for (i in 7:491){
   a <- table(Ready_del[,i])
   b <- a["2"]/sum(a)
   valores <- c(valores, b)
@@ -603,7 +754,7 @@ for (i in 6:490){
 
 burden_table$Burden <- valores
 
-race <- read.delim("/src/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
   `colnames<-`(c("ID", "Race"))
 
 only_race <- race %>%
@@ -612,27 +763,88 @@ only_race <- race %>%
 wes <- wes_palette("Cavalcanti1")
 wesi <- c(wes[1], wes[2], wes[5])
 
-p<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+Sorghum_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = wesi)+
   theme(axis.line = element_line(size=1, colour = "black"),
         panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
         panel.border = element_blank(), panel.background = element_blank()) +
-  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.text.x=element_text(colour="black", size = 10),
-        axis.text.y=element_text(colour="black", size = 10))
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) 
 
-p
+Sorghum_burden
 
 ```
 
+# BURDEN MAIZE
 
 
+```{r}
+
+header <- read.delim("/home/roberto/Maize/Comparative_Hapmap/Burden/true_header", header = F)
+
+dosage <- read.delim("/home/roberto/Maize/Comparative_Hapmap/Burden/Burden_for_R", header = T) %>%
+  `colnames<-`(header[,1])
 
 
+burden_table <- as.data.frame(matrix(nrow= 95,ncol=2))
+burden_table[,1] <- header[5:99,1]
+colnames(burden_table) <- c("ID", "Burden")
 
 
+valores <- vector()
+for (i in 5:99){
+  a <- table(dosage[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild"))
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+Maize_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  ylab("")
+
+Maize_burden
+
+```
+
+Figure 2B and 2C
+
+```{r, fig.width= 8.5, fig.height=6}
+library(patchwork)
+
+Merged <- Graph + (Sorghum_del + Maize_del) + (Sorghum_burden + Maize_burden) + plot_layout(ncol = 1)  
+Merged
+
+ggsave("/home/roberto/Sorghum/Figures/Fig2_full_ultimate.png", plot= Merged, device = "png", scale = 1, width = 9, height = 6, units = c("in"),dpi = 750, limitsize = TRUE)
+
+```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 

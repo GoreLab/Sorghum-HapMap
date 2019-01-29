@@ -20,7 +20,7 @@ This repository includes code use in the article:
 
   *6_joint_variant_calling.sh*
 
-  ## Describing the Population:
+  ### Describing the Population:
 
   *PrincipalComponentAnalysis.Rmd:* (/HAPMAP/)
 

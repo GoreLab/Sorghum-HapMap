@@ -1,41 +1,50 @@
 This repository includes code use in the article:
 
-Working Title:
-#  Comparative Sorghum-Maize HapMap
+#  **A Comparative Sorghum-Maize HapMap**
+![language: R](https://img.shields.io/badge/language-R-blue.svg)
+![language: Python](https://img.shields.io/badge/language-Python-green.svg)
+![status: WIP](https://img.shields.io/badge/status-WorkInProgress-red.svg)
 
-## SNP calling:
-*1_Sentieon_merge_and_remove_duplicates.sh*
+## **Building the Sorghum HapMap**
 
-*2_bam_stat.sh*
+  ### SNP calling:
+  *1_Sentieon_merge_and_remove_duplicates.sh*
 
-*3_Sentieon_GATK_command_line_Indel_realigner.sh*
+  *2_bam_stat.sh*
 
-*4_Sentieon_GATK_command_line_Recal_providing_list.sh*
+  *3_Sentieon_GATK_command_line_Indel_realigner.sh*
 
-*5_Sentieon_GATK_command_line_HC_step2.sh*
+  *4_Sentieon_GATK_command_line_Recal_providing_list.sh*
 
-*6_joint_variant_calling.sh*
+  *5_Sentieon_GATK_command_line_HC_step2.sh*
 
-## Describing the Population:
+  *6_joint_variant_calling.sh*
 
-*PrincipalComponentAnalysis.Rmd:* (/HAPMAP/)
+  ## Describing the Population:
 
-Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
+  *PrincipalComponentAnalysis.Rmd:* (/HAPMAP/)
 
-## Evolutionary model:
-
-Recombination rates.-
-
-*FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
-
-*FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file
-
-*Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
-
-Genetic diversity (Pi).-
+  Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
 
 
-## Plots: 
-(CIRCOS and ... folders)
+## **Deleterious Alleles:**
 
-*1_gene_density.py:* Calculates gene density per chromosome from a gff3 file
+
+
+
+
+## **Evolutionary model:**
+
+  Recombination rates.-
+
+  *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
+
+  *FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file
+
+  *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
+
+  Genetic diversity (Pi).-
+
+
+  ### Circos Plots: 
+  *1_gene_density.py:* Calculates gene density per chromosome from a gff3 file

@@ -55,3 +55,7 @@ This repository includes code use in the article:
 
   ### Circos Plots: 
   *1_gene_density.py:* Calculates gene density per chromosome from a gff3 file
+  
+  ## Data availability:
+  The raw sequencing data is available through the NCBI BioProject **PRJNA513297**. Alignment Bam files are available through the CyVerse repository #######. Code used throughout the article is available through this GitHub repository. For any other inquiry please contact the authors directly 
+  

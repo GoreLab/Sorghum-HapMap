@@ -18,7 +18,7 @@ library(patchwork)
 
 ```{r, fig.height=4, fig.width=12}
 
-LDscore <- read.delim("/home/MENDEL/Sorghum/Evol_model/LD/LDscore/LDscore.100k.score.ld", sep = " ")
+LDscore <- read.delim("/home/roberto/Sorghum/Evol_model/LD/LDscore/LDscore.100k.score.ld", sep = " ")
 
 LDscore_r <- LDscore[,-(4:7)]
 mean_LD <- LDscore[,-c(4,6:8)]
@@ -39,18 +39,18 @@ manhattan(LDscore_r, p = "ldscore", logp = FALSE, ylab = "LDscore", genomewideli
 
 ```{r,fig.height= 3, fig.width=7}
 
-
+library(qqman)
 library(wesanderson)
 wes <- wes_palette("Cavalcanti1")
 
-tiff("/home/rjl278/workdir/LDscore.tiff", width = 7, height = 3, units = 'in', res = 450 )
+tiff("/home/roberto/docker/L/workdir/LDscore.tiff", width = 7, height = 3, units = 'in', res = 450 )
 LDplot <- manhattan(mean_LD, p = "ldscore", logp = FALSE, ylab = "Mean LDscore", genomewideline = FALSE, col = alpha(wes, 0.2), cex=0.15, suggestiveline = FALSE,  cex.axis = 0.9, cex.lab = 0.9, ylim=c(0, 0.4))
 dev.off()
 
 
 # Plotting mean LD scores
-LDplot <- manhattan(mean_LD, p = "ldscore", logp = FALSE, ylab = "Mean LDscore", genomewideline = FALSE, col = alpha(wes, 0.2), cex=0.15, suggestiveline = FALSE,  cex.axis = 0.9, cex.lab = 0.9, ylim=c(0, 0.4) )
-
+LDplot <- manhattan(subset(mean_LD, CHR ==2),p = "ldscore", logp = FALSE, ylab = "Mean LDscore", genomewideline = FALSE, col = alpha(wes, 0.9), cex=0.95, suggestiveline = FALSE,  cex.axis = 0.9, cex.lab = 0.9, ylim=c(0, 0.4), xlim = c(67574082, 67574710) )
+subset(gwasResults, CHR == 1)
 ```
 
 ## LD decay plot (Fig 1B)

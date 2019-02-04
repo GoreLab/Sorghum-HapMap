@@ -9,24 +9,18 @@ This repository includes code use in the article:
 
 ## **Building the Sorghum HapMap**
 
-  ### SNP calling:
-  *1_Sentieon_merge_and_remove_duplicates.sh*
-
-  *2_bam_stat.sh*
-
-  *3_Sentieon_GATK_command_line_Indel_realigner.sh*
-
-  *4_Sentieon_GATK_command_line_Recal_providing_list.sh*
-
-  *5_Sentieon_GATK_command_line_HC_step2.sh*
-
-  *6_joint_variant_calling.sh*
-
+  ### SNP calling: (/HAPMAP/)
+*0_Sentieon_BWA_Batch5.sh* - Sample of alignment file using BWA  
+*1_Sentieon_merge_and_remove_duplicates.sh* - Merging Bam files according to Figure S2A  
+*2_bam_stat.sh* - Calculate alignment stats  
+*3_Sentieon_GATK_command_line_Indel_realigner.sh* - Realign reads around InDels  
+*4_Sentieon_GATK_command_line_Recal_providing_list.sh* - Recalibration using high quality positions 
+*5_Sentieon_GATK_command_line_HC_step2.sh* - Haplotypes (produces gVCFs)  
+*6_joint_variant_calling.sh* - Call the variants and produce a VCF file.
+    
   ### Describing the Population:
 
-  *PrincipalComponentAnalysis.Rmd:* (/HAPMAP/)
-
-  Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
+  *Population_structure_pub.Rmd:* (/HAPMAP/) - Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
 
 
 ## **Deleterious alleles:**

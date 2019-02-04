@@ -5,6 +5,8 @@ This repository includes code use in the article:
 ![language: Python](https://img.shields.io/badge/language-Python-green.svg)
 ![status: WIP](https://img.shields.io/badge/status-WorkInProgress-red.svg)
 
+![alt text](https://github.com/GoreLab/Sorghum-HapMap/blob/master/CIRCOS/GitHub_figure.svg)
+
 ## **Building the Sorghum HapMap**
 
   ### SNP calling:

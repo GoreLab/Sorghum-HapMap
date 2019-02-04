@@ -27,7 +27,7 @@ This repository includes code use in the article:
   Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
 
 
-## **Deleterious Alleles:**
+## **Deleterious alleles:**
 
 
 

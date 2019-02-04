@@ -7,9 +7,9 @@ This repository includes code use in the article:
 
 ![alt text](https://github.com/GoreLab/Sorghum-HapMap/blob/master/CIRCOS/GitHub_figure.svg)
 
-## **Building the Sorghum HapMap**
+## **Building the Sorghum HapMap** (/HAPMAP/)
 
-  ### SNP calling: (/HAPMAP/)
+  ### SNP calling: 
 *0_Sentieon_BWA_Batch5.sh* - Sample of alignment file using BWA  
 *1_Sentieon_merge_and_remove_duplicates.sh* - Merging Bam files according to Figure S2A  
 *2_bam_stat.sh* - Calculate alignment stats  
@@ -20,7 +20,18 @@ This repository includes code use in the article:
     
   ### Describing the Population:
 
-  *Population_structure_pub.Rmd:* (/HAPMAP/) - Calculates principal component analysis on the marker matrix using SNPrelate. Plots included
+  *Population_structure_pub.Rmd:* - Calculates principal component analysis on the marker matrix using SNPrelate. Plots included  
+  *MAF_FST.Rmd* - Calculates Allele frequency spectrum and FSTs between races  
+  *Duplicates* - Checking the duplicates IBS matrix  
+  *Linkage_disequilibrium.Rmd* - Code use to plot local LD plot and classic LD decay plots.  
+  
+  ### Misc:
+*Filter_MAF_OE.py* - Extract monomorphic sites and sites with a threshold of heterozygosity   
+*count_fastq.sh* - Count the number of reads in a fastq  
+*vcfaddanot.py* - Add allele balancing field AB in a vcf file  
+
+  
+  
 
 
 ## **Deleterious alleles:**

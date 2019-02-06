@@ -53,8 +53,9 @@ This repository includes code use in the article:
   Genetic diversity (Pi).-
 
 
-  ### Circos Plots: 
-  *1_gene_density.py:* Calculates gene density per chromosome from a gff3 file
+  ### Circos Plots: (/CIRCOS/)
+  *1_gene_density.py:* - Calculates gene density per chromosome from a gff3 file  
+  *CIRCOS/cplot/ :* - includes conf files (circos.conf, ideogram.conf, mycolors.conf and ticks.conf) also includes the output in png and svg formats  
   
   ## Data availability:
   The raw sequencing data is available through the NCBI BioProject **PRJNA513297**. Alignment Bam files are available through the CyVerse repository #######. Code used throughout the article is available through this GitHub repository. For any other inquiry please contact the authors directly. 

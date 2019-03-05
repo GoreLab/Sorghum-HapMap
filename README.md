@@ -1,6 +1,6 @@
 This repository includes code use in the article:
 
-#  **A Comparative Sorghum-Maize HapMap**
+#  **Comparative evolutionary analysis and prediction of genomic diversity patterns between sorghum and maize**
 ![language: R](https://img.shields.io/badge/language-R-blue.svg)
 ![language: Python](https://img.shields.io/badge/language-Python-green.svg)
 ![status: WIP](https://img.shields.io/badge/status-WorkInProgress-red.svg)

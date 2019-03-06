@@ -31,9 +31,6 @@ This repository includes code use in the article:
 *vcfaddanot.py* - Add allele balancing field AB in a vcf file  
 
   
-  
-
-
 ## **Deleterious alleles:**
 
 
@@ -51,6 +48,10 @@ This repository includes code use in the article:
   *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
 
   Genetic diversity (Pi).-
+  
+  GERP (Genomic evolutionary rate profiling).-
+  
+  TAU (SSW 20bp alignment between sorghum and maize).- 
 
 
   ### Circos Plots: (/CIRCOS/)

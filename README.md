@@ -7,7 +7,7 @@ This repository includes code use in the article:
 
 ![alt text](https://github.com/GoreLab/Sorghum-HapMap/blob/master/CIRCOS/GitHub_figure.svg)
 
-## **Building the Sorghum HapMap** (/HAPMAP/)
+## **Building the Sorghum HapMap** (_`/HAPMAP/Sorghum-HapMap`_)
 
   ### SNP calling: 
 *0_Sentieon_BWA_Batch5.sh* - Sample of alignment file using BWA  
@@ -38,6 +38,11 @@ This repository includes code use in the article:
 
 
 ## **Evolutionary model:**
+
+  ### Defining  sorghum genome windows.- 
+  The midpoint distance between adjacent genes was calculated and a series of intervals that covered each chromosome from start to end were calculated. In total, the sorghum genome was divided into 34,028 fragments.
+  Go to `Sorghum-HapMap/Evol_model/Windows/` for details. 
+
 
   ### Recombination rates.-
 

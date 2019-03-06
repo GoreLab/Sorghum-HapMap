@@ -39,7 +39,7 @@ This repository includes code use in the article:
 
 ## **Evolutionary model:**
 
-  Recombination rates.-
+  ###Recombination rates.-
 
   *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
 
@@ -47,14 +47,13 @@ This repository includes code use in the article:
 
   *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
 
-  Genetic diversity (Pi).-
+  ###Genetic diversity (Pi).-
   
-  GERP (Genomic evolutionary rate profiling).-
+  ###GERP (Genomic evolutionary rate profiling).-
   
-  TAU (SSW 20bp alignment between sorghum and maize).- 
+  ###TAU (SSW 20bp alignment between sorghum and maize).- 
 
-
-  ### Circos Plots: (/CIRCOS/)
+  ###Circos Plots: (/CIRCOS/)
   *1_gene_density.py:* - Calculates gene density per chromosome from a gff3 file  
   *CIRCOS/cplot/ :* - includes conf files (circos.conf, ideogram.conf, mycolors.conf and ticks.conf) also includes the output in png and svg formats  
   

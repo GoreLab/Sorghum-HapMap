@@ -7,7 +7,7 @@ This repository includes code use in the article:
 
 ![alt text](https://github.com/GoreLab/Sorghum-HapMap/blob/master/CIRCOS/GitHub_figure.svg)
 
-## **Building the Sorghum HapMap** (_`/HAPMAP/Sorghum-HapMap`_)
+## **Building the Sorghum HapMap** (`/HAPMAP/Sorghum-HapMap`)
 
   ### SNP calling: 
 *0_Sentieon_BWA_Batch5.sh* - Sample of alignment file using BWA  
@@ -36,24 +36,22 @@ This repository includes code use in the article:
 
 
 
-
 ## **Evolutionary model:**
 
-  ### Defining  sorghum genome windows.- 
+  ### Defining  sorghum genome windows:
   The midpoint distance between adjacent genes was calculated and a series of intervals that covered each chromosome from start to end were calculated. In total, the sorghum genome was divided into 34,028 fragments.
   Go to `Sorghum-HapMap/Evol_model/Windows/` for details. 
-
-
-  ### Recombination rates.-
-
-  *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
-
-  *FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file
-
-  *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
-
-  ### Genetic diversity (Pi).-
   
+  ### Genetic diversity (Pi):
+  *average_pi_per_genewindow.py* - Average pi per window   
+  *average_pi_per_window.bed* - Output, average pi per window  
+  
+  ### Recombination rates:
+
+  *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows  
+  *FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file  
+  *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density   
+
   ### GERP (Genomic evolutionary rate profiling).-
   
   ### TAU (SSW 20bp alignment between sorghum and maize).- 

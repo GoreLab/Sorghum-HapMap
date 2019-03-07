@@ -1,0 +1,94 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Deleterious SNPs density
+
+```{r}
+
+density_file <- read.delim("/home/roberto/Sorghum/Domestication/TOR.deldensity", header = F, stringsAsFactors = F)%>%
+  `colnames<-`(c("Chr","From", "To", "Del", "Non_del")) %>%
+  mutate(ratio = as.numeric(Del)/as.numeric(Non_del)) %>%
+  filter(Chr == 2)
+
+plot(x = density_file$From, y=density_file$ratio)
+
+
+```
+
+```{r, fig.width=9, fig.height=4}
+
+library(ggplot2)
+library(wesanderson)
+
+rho_table <- as.data.frame(matrix(nrow = 0, ncol = 4)) %>%
+  set_colnames(c("Position", "genes", "chr", "rho"))
+
+
+for (i in 1:10) {
+  variable1 <- paste("/home/roberto/Sorghum/Evol_model/Recombination/Step3_output/graph_with_gene_density/rho", i, sep = "")
+  variable2 <- paste("/home/roberto/Sorghum/Evol_model/Recombination/Step3_output/graph_with_gene_density/chr", i, sep = "")
+  variable3 <- paste("chr", i, sep = "")
+  tmp <- read.delim(variable1, header = F, sep = " ") %>% set_colnames(c("Position", "rho"))
+  
+  tmp2 <- read.delim(variable2, header = F) %>% set_colnames(c("Position", "genes")) %>%
+  mutate(chr = variable3) %>%
+  left_join(tmp, by ="Position" )
+  
+  rho_table <- rbind(rho_table, tmp2)
+  
+}
+
+
+den5 <- rho_table %>%
+  filter(chr == "chr2")
+
+col <- wes_palette("Chevalier1")
+colo <- wes_palette("Zissou1")
+
+
+joined <- den5 %>% ggplot() + 
+  annotate("rect", xmin = 30213840, xmax = 38213840, ymin = 0, ymax = Inf, alpha = .15) +
+  geom_vline(xintercept=34213840.5) +
+  geom_point(mapping =  aes(x = Position, y = rho), alpha =0.01, shape=19, color=col[1]) +
+  geom_bar(mapping = aes(x = Position, y = genes *2.5 ), stat = "identity", alpha =0.5, fill=col[2]) +
+  geom_line(data=density_file, aes(x=From, y=ratio*300), color=colo[5], size=1, alpha=0.8) +
+  geom_smooth(method = loess, mapping = aes(x = Position, y = rho), color= col[1], fill=col[3] ) +
+  scale_y_continuous(name = expression("Rho")) +
+  scale_y_continuous(sec.axis = sec_axis(~ . * 1/300 , name = "Deleterious/NonDeleterious"))+
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "white"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        text=element_text(family="Tahoma"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key=element_rect(fill="white", colour="white")) +
+  scale_x_continuous(name ="Position (Mb)", breaks = c(0, 20000000, 40000000, 60000000, 80000000), labels = c("0","20", "40", "60", "80"))
+
+joined
+
+
+
+```
+
+
+
+```{r}
+
+ggsave("/home/roberto/Sorghum/Figures/Distribution_clean.png", plot= joined, device = "png", scale = 1, width = 9, height = 4, units = c("in"),dpi = 450, limitsize = TRUE)
+
+
+
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

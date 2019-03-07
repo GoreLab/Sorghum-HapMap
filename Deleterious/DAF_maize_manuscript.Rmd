@@ -1,0 +1,91 @@
+---
+title: "Maize DAF"
+output: html_notebook
+---
+
+## Building the master table 
+
+```{r}
+
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(ggplot2)
+
+GERP <- read.delim(file = "/home/roberto/Maize/Comparative_Hapmap/DEL/GERP.ready", header = F, stringsAsFactors = FALSE) %>%
+  `colnames<-`(c("link", "GERP"))
+SIFT <- read.delim(file = "/home/roberto/Maize/Comparative_Hapmap/DEL/SIFT_unix.noalternates", stringsAsFactors = FALSE)%>%
+  rename(link = CHROM_POS) %>%
+  left_join(GERP, by="link")
+
+
+#########################################################################################
+
+deleterious <- SIFT %>%
+  filter(as.numeric(as.character(SIFT_SCORE)) <= 0.05 & GERP >= 2) %>%
+  mutate(CLASS = "deleterious")
+
+deleterious_nc <- SIFT %>%
+  filter(as.numeric(as.character(SIFT_SCORE)) <= 0.05 & GERP < 2) %>%
+  mutate(CLASS = "deleterious_nc")
+
+stops <- SIFT %>%
+  filter(VARIANT_TYPE == "STOP-GAIN" | VARIANT_TYPE == "STOP-LOSS") %>%
+  mutate(CLASS = "stops")
+
+#########################################################################################
+
+fracs <- read.delim("/home/roberto/Maize/Comparative_Hapmap/DEL/Maize.fractionation", header = T, stringsAsFactors = FALSE)
+counts <- read.delim("/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/counts", header = T, stringsAsFactors = F)
+
+joined <- rbind(deleterious, deleterious_nc, stops)%>%
+  left_join(fracs, by="TRANSCRIPT_ID") %>%
+  inner_join(counts, by="link" ) %>%
+  select(-REGION, -VARIANT_TYPE, -SIFT_PREDICTION, -GERP, -AlleleA, -AlleleB)
+
+
+#write.table(joined, file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/preMaster.txt", quote = F, row.names = F, col.names = T, sep = "\t")
+
+```
+
+
+```{r}
+
+synteny <- read.delim("/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/comprimido", header = T)
+syntenyc <- synteny[!duplicated(synteny$TRANSCRIPT_ID),]
+
+maize_matching <- joined %>%
+  left_join(syntenyc, by="TRANSCRIPT_ID")
+
+write.table(maize_matching, file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/READY_to_run/DAF_maize_table", quote = F, row.names = F, col.names = T, sep = "\t")
+
+```
+
+```{r}
+
+daf <- read.delim("/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/READY_to_run/splitting/tmpR", header = F) %>%
+  `colnames<-`(c("AA", "TT", "CC", "GG")) %>%
+  mutate(SUM = rowSums(.[1:4])) %>%
+  mutate(nA = round((AA*100)/SUM)) %>%
+  mutate(nT = round((TT*100)/SUM)) %>%
+  mutate(nC = round((CC*100)/SUM)) %>%
+  mutate(nG = round((GG*100)/SUM)) %>%
+  select(nA,nT,nC, nG)
+  
+write.csv(daf,file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/READY_to_run/splitting/tmp", quote = F, col.names = F, row.names = F)
+
+
+```
+
+```{r}
+
+daf <- read.delim(file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/MAIZE/READY_to_run/splitting/DAFtoR", header = F) %>% 
+  `colnames<-`(c("link","DAF_p")) %>%
+  filter(DAF_p <0.5)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

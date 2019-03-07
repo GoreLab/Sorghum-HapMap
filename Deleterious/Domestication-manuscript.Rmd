@@ -1,0 +1,287 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+
+
+Domestication <- read.delim( file = "/home/roberto/Sorghum/Domestication/Domestication_v311", header =  F, stringsAsFactors = FALSE) 
+Domesticated <- Domestication[,1]
+Improvement <- read.delim( file = "/home/roberto/Sorghum/Domestication/Improvement_v311", header =  F, stringsAsFactors = FALSE) 
+Improved <- Improvement[,1]
+Affected_genes <- c(Domesticated, Improved)
+Synteny <- read.delim( file = "/home/roberto/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T, stringsAsFactors = FALSE) 
+
+
+Dom <- Synteny %>%
+  filter(Gene %in% Domesticated) %>%
+  select(SET, Group)
+Dom_per <- rename(count(Dom, SET), Freq = n) %>% 
+  mutate(Percentage = Freq/sum(Freq)) %>%
+  mutate(GROUP = "Domestication")
+
+Imp <- Synteny %>%
+  filter(Gene %in% Improved) %>%
+  select(SET, Group)
+Imp_per <- rename(count(Imp, SET), Freq = n) %>% 
+  mutate(Percentage = Freq/sum(Freq)) %>%
+  mutate(GROUP = "Improved")
+
+Rest <- Synteny %>%
+  filter(!Gene %in% Affected_genes) %>%
+  select(SET, Group)
+Rest_per <- rename(count(Rest, SET), Freq = n) %>% 
+  mutate(Percentage = Freq/sum(Freq)) %>%
+  mutate(GROUP = "Rest")
+
+Merged <- rbind(Dom_per, Imp_per, Rest_per)
+
+wes =wes_palette("Cavalcanti1")
+weso = c(wes[1],wes[2],wes[5],wes[3],wes[4])
+
+Sorghum_del <- ggplot() + theme_bw() +
+  geom_bar(aes(y = Percentage, x = GROUP, fill = SET), data = Merged, stat="identity", width = 0.7) +
+  theme(legend.position="none", legend.direction="horizontal",
+        legend.title = element_blank()) +
+  scale_fill_manual(values=weso) +
+  xlab("") + 
+  ylab("Proportion")
+  
+Sorghum_del
+
+
+```
+
+
+## Genes 
+
+```{r}
+
+load("/home/roberto/Sorghum/Evol_model/Burden/Burden_master_manuscript.Rdata")
+
+derivao <- Master %>%
+  filter(Class == "Derived")
+
+for (i in 7:491){
+  derivao[,i][derivao[,i] == 0] <- "ZERO"
+  derivao[,i][derivao[,i] == 2] <- "TWO"
+}
+
+for (i in 7:491){
+  derivao[,i][derivao[,i] == "ZERO"] <- as.numeric(2)
+  derivao[,i][derivao[,i] == "TWO"] <- as.numeric(0)
+  derivao[,i] <- as.numeric(derivao[,i])
+}
+  
+
+##
+ancestral <- Master %>%
+  filter(Class == "Ancestral") 
+
+
+Ready <- rbind(ancestral, derivao)
+
+
+```
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+Dom <- Synteny %>%
+  filter(Gene %in% Domesticated) %>%
+  select(ID)
+Domesticacion <- Dom[,1]
+
+Domesticacion <- (gsub("Chr0", "", Domesticacion))
+Domesticacion <- (gsub("Chr10", "10", Domesticacion))
+
+Domestic_dosage <- Ready %>%
+  filter(CHR_POS %in% Domesticacion)
+
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(Domestic_dosage[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+Domplot<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylim(0,0.20)
+
+Domplot
+
+
+```
+
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+Imp <- Synteny %>%
+  filter(Gene %in% Improved) %>%
+  select(ID)
+Improvisacion<- Imp[,1]
+
+Improvisacion <- (gsub("Chr0", "", Improvisacion))
+Improvisacion <- (gsub("Chr10", "10", Improvisacion))
+
+Improved_dosage <- Ready %>%
+  filter(CHR_POS %in% Improvisacion)
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(Improved_dosage[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+improplot<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylim(0,0.20)
+  
+
+improplot
+
+
+
+```
+
+
+## All deleterious alleles
+
+```{r}
+
+#Calculating different burden levels
+library(ggplot2)
+
+header <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  a <- table(Ready[,i])
+  b <- a["2"]/sum(a)
+  valores <- c(valores, b)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/home/roberto/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+
+all<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylim(0,0.2)
+
+all
+
+
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

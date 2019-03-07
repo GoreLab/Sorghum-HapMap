@@ -1,13 +1,13 @@
 This repository includes code use in the article:
 
-#  **A Comparative Sorghum-Maize HapMap**
+#  **Comparative evolutionary analysis and prediction of genomic diversity patterns between sorghum and maize**
 ![language: R](https://img.shields.io/badge/language-R-blue.svg)
 ![language: Python](https://img.shields.io/badge/language-Python-green.svg)
 ![status: WIP](https://img.shields.io/badge/status-WorkInProgress-red.svg)
 
 ![alt text](https://github.com/GoreLab/Sorghum-HapMap/blob/master/CIRCOS/GitHub_figure.svg)
 
-## **Building the Sorghum HapMap** (/HAPMAP/)
+## **Building the Sorghum HapMap** (`/HAPMAP/Sorghum-HapMap`)
 
   ### SNP calling: 
 *0_Sentieon_BWA_Batch5.sh* - Sample of alignment file using BWA  
@@ -31,30 +31,41 @@ This repository includes code use in the article:
 *vcfaddanot.py* - Add allele balancing field AB in a vcf file  
 
   
+## **Deleterious alleles:** (`/HAPMAP/Deleterious`)
+
+*Deleterious_analysis_manuscript.Rmd* - R Notebook, contains the code to analyze the Deleterious load in both maize and sorghum. Generates figure 2 of the main manuscript.  
+
+*Deleterious_distribution-copy.Rmd* - Code use to plot the distribution of deleterious alleles across the sorghum chromosome, it overlays population recombination rates and gene density.  
+
+*Domestication-manuscript.Rmd* - Analyze deleterious load in previously identified improvement and domestication genes.  
+
+*DAF_maize_manuscript.Rmd* - Gets the Derived Allele Frequencies from maize in the right format.
+
+*GERP_distribution.Rmd* - Calculates some genome wide statistics on sorghum GERP scores.
+
+## **Evolutionary model:** (`/HAPMAP/Evol_model`)
+
+  ### Defining  sorghum genome windows:
+  The midpoint distance between adjacent genes was calculated and a series of intervals that covered each chromosome from start to end were calculated. In total, the sorghum genome was divided into 34,028 fragments.
+  Go to `Sorghum-HapMap/Evol_model/Windows/` for details. 
   
+  ### Genetic diversity (Pi):
+  *average_pi_per_genewindow.py* - Average pi per window   
+  *average_pi_per_window.bed* - Output, average pi per window  
+  
+  ### Recombination rates:
 
+  *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows  
+  *FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file  
+  *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density   
 
-## **Deleterious alleles:**
+  ### GERP (Genomic evolutionary rate profiling).-
+  
+  ### TAU (SSW 20bp alignment between sorghum and maize).- 
 
-
-
-
-
-## **Evolutionary model:**
-
-  Recombination rates.-
-
-  *FASTEPRR.R:* Wrappper to calculate rho across the genome in fixed windows
-
-  *FASTEPRR_segments.R:* Wrapper to calculate rho across windows specified in a bed file
-
-  *Recombination_Rates.Rmd:* R Notebook for plotting recombination rates across the chromosomes together with gene density 
-
-  Genetic diversity (Pi).-
-
-
-  ### Circos Plots: 
-  *1_gene_density.py:* Calculates gene density per chromosome from a gff3 file
+  ### Circos Plots: (/CIRCOS/)
+  *1_gene_density.py:* - Calculates gene density per chromosome from a gff3 file  
+  *CIRCOS/cplot/ :* - includes conf files (circos.conf, ideogram.conf, mycolors.conf and ticks.conf) also includes the output in png and svg formats  
   
   ## Data availability:
   The raw sequencing data is available through the NCBI BioProject **PRJNA513297**. Alignment Bam files are available through the CyVerse repository #######. Code used throughout the article is available through this GitHub repository. For any other inquiry please contact the authors directly. 

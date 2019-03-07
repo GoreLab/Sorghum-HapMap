@@ -63,7 +63,7 @@ This repository includes code use in the article:
   
   ### TAU (SSW 20bp alignment between sorghum and maize).- 
 
-  ### Circos Plots: (/CIRCOS/)
+ ## **Circos Plots:** (`/HAPMAP/CIRCOS`)
   *1_gene_density.py:* - Calculates gene density per chromosome from a gff3 file  
   *CIRCOS/cplot/ :* - includes conf files (circos.conf, ideogram.conf, mycolors.conf and ticks.conf) also includes the output in png and svg formats  
   

@@ -31,12 +31,19 @@ This repository includes code use in the article:
 *vcfaddanot.py* - Add allele balancing field AB in a vcf file  
 
   
-## **Deleterious alleles:**
+## **Deleterious alleles:** (`/HAPMAP/Deleterious`)
 
+*Deleterious_analysis_manuscript.Rmd* - R Notebook, contains the code to analyze the Deleterious load in both maize and sorghum. Generates figure 2 of the main manuscript.  
 
+*Deleterious_distribution-copy.Rmd* - Code use to plot the distribution of deleterious alleles across the sorghum chromosome, it overlays population recombination rates and gene density.  
 
+*Domestication-manuscript.Rmd* - Analyze deleterious load in previously identified improvement and domestication genes.  
 
-## **Evolutionary model:**
+*DAF_maize_manuscript.Rmd* - Gets the Derived Allele Frequencies from maize in the right format.
+
+*GERP_distribution.Rmd* - Calculates some genome wide statistics on sorghum GERP scores.
+
+## **Evolutionary model:** (`/HAPMAP/Evol_model`)
 
   ### Defining  sorghum genome windows:
   The midpoint distance between adjacent genes was calculated and a series of intervals that covered each chromosome from start to end were calculated. In total, the sorghum genome was divided into 34,028 fragments.

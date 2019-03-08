@@ -1,0 +1,12 @@
+# Sorghum bicolor Sbi1/Sbi1.4/SbGDB v181 23 Dec 2010
+# http://www.plantgdb.org/SbGDB/
+chr - sb1 1 0 80884392 black
+chr - sb2 2 0 77742459 black
+chr - sb3 3 0 74386277 black
+chr - sb4 4 0 68658214 black
+chr - sb5 5 0 71854669 black
+chr - sb6 6 0 61277060 black
+chr - sb7 7 0 65505356 black
+chr - sb8 8 0 62686529 black
+chr - sb9 9 0 59416394 black
+chr - sb10 10 0 61233695 black

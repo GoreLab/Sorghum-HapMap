@@ -62,10 +62,17 @@ This repository includes code use in the article:
   ### GERP (Genomic evolutionary rate profiling).-
   
   ### TAU (SSW 20bp alignment between sorghum and maize).- 
-
+  
+ ## **CNN (DeepEvolution):** (`/HAPMAP/CNN`)
+ Here we are including three folders with the code for the prediction of both genetic diversity and fractionation status. The input data and the output data in graphical and tabular data.
+ 
+ *resnet_diversity_feature_importance.py* - CNN for predicting nucleotide diversity  
+ *resnet_frac_feature_importance.py* - CNN for predicting fractionation status  
+ 
  ## **Circos Plots:** (`/HAPMAP/CIRCOS`)
   *1_gene_density.py:* - Calculates gene density per chromosome from a gff3 file  
-  *CIRCOS/cplot/ :* - includes conf files (circos.conf, ideogram.conf, mycolors.conf and ticks.conf) also includes the output in png and svg formats  
+  *CIRCOS plot config files:* (`/HAPMAP/CIRCOS/cplot`) - includes conf files (circos.conf, ideogram.conf, mycolors.conf, circos_dev.conf and ticks.conf) also includes the output in png and svg formats.  
+  *data:* (`/HAPMAP/CIRCOS/cplot`) - data used as input
   
   ## Data availability:
   The raw sequencing data is available through the NCBI BioProject **PRJNA513297**. Alignment Bam files are available through the CyVerse repository #######. Code used throughout the article is available through this GitHub repository. For any other inquiry please contact the authors directly. 

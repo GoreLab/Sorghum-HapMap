@@ -26,7 +26,7 @@ library(doMC)
 registerDoMC(40)
 
 ## LOAD the window files per chromosome:
-window_file <- read.delim("/workdir/rjl278/Sorghum/Evol_model/WINDOWS/windows", header=F) %>%
+window_file <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Recombination/FINAL/MISSING/windows", header=F) %>%
         `colnames<-`(c("chr", "from", "to", "distance"))
 
 ### STEP 1

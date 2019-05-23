@@ -157,7 +157,7 @@ def rmse(y_true, y_pred):
 ##-------------------------Training the deep residual convolution neural network model----------------------##
 
 # Prefix where the project is in:
-dir_proj_ = "~/Documents/Sorghum-HapMap/CNN/"
+dir_proj_ = "/home/jhonathan/Documents/Sorghum-HapMap/CNN/"
 
 # Variable to predict:
 target_ = 'frac' 

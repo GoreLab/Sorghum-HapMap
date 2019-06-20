@@ -3,7 +3,6 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-
 # Calculating DAF while correcting for the reference bias:
 
 ```{r, fig.width=10, fig.height=4}
@@ -18,7 +17,7 @@ library(wesanderson)
 library(GDAtools)
 
 
-daf <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+daf <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL_norep.DAF", header =  T)  %>%
   mutate(Class = case_when(DAF_p >= 0.55 & Ref_count > Alt_count ~ "Ancestral",
                           DAF_p >= 0.55 & Alt_count > Ref_count ~ "Derived",
                           DAF_p <=0.45 & Ref_count > Alt_count ~ "Derived",
@@ -26,7 +25,7 @@ daf <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/sp
                           DAF_p <0.55 & DAF_p > 0.45 ~ "NA") ) %>%
   mutate(DAF = case_when(Class == "Ancestral" ~ Alt_count/(Ref_count + Alt_count),
                          Class == "Derived" ~ Ref_count/(Ref_count + Alt_count))) %>%
-  select(-maize1_v4, -maize2_v4, -viridis, -SIFT, -SIFT_score, -Type, -MAF, -maize1_v3, -maize2_v3, -DAF_p ) %>%
+  dplyr::select(-maize1_v4, -maize2_v4, -viridis, -SIFT, -SIFT_score, -Type, -MAF, -maize1_v3, -maize2_v3, -DAF_p ) %>%
   filter(Class == "Ancestral") %>%
   mutate(Bin = cut(DAF, breaks=seq(0, 1, 0.01), labels=seq(0, 0.99, 0.01))) %>%
   mutate(gerp_round = round(GERP))
@@ -45,7 +44,7 @@ bias <- tdel_wide_prop %>%
 
 ##################################################################
 
-daf_all <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+daf_all <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL_norep.DAF", header =  T) %>%
   mutate(Class = case_when(DAF_p >= 0.55 & Ref_count > Alt_count ~ "Ancestral",
                           DAF_p >= 0.55 & Alt_count > Ref_count ~ "Derived",
                           DAF_p <=0.45 & Ref_count > Alt_count ~ "Derived",
@@ -275,6 +274,7 @@ SIFT <- read.delim(file = "/workdir/rjl278/Maize/Comparative_Hapmap/DEL/SIFT_uni
   dplyr::rename(link = CHROM_POS) %>%
   left_join(GERP, by="link")
 
+
 #########################################################################################
 
 deleterious <- SIFT %>%
@@ -298,15 +298,13 @@ synonymous <- SIFT %>%
   mutate(CLASS = "synonymous")
 
 
-
 #########################################################################################  
 
-fracs <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/DEL/Maize.fractionation", header = T, stringsAsFactors = FALSE)
+fracs <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/DEL/Maize.fraction_nodup", header = T, stringsAsFactors = FALSE)
 
 joined <- rbind(deleterious, deleterious_nc, stops, tolerated, synonymous) %>%
-  left_join(fracs, by="TRANSCRIPT_ID")
-
-
+  left_join(fracs, by="TRANSCRIPT_ID") 
+  
 ## Load the Derived allele frequencies and derived allele for maize
 
 daf_maize <- read.delim("/workdir/rjl278/Maize/GERP_bias/DAF_maize.table", header = T)
@@ -460,7 +458,7 @@ ggsave("/workdir/rjl278/Sorghum/Figures/Fig2_b.png", plot= panelb, device = "png
 load("/workdir/rjl278/Sorghum/Evol_model/Burden/Burden_master_manuscript.Rdata")
 
 # ADD the Weights
-daf_all <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL.DAF", header =  T) %>%
+daf_all <- read.delim( file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/splitting/FULL_norep.DAF", header =  T) %>%
   mutate(Class = case_when(DAF_p >= 0.55 & Ref_count > Alt_count ~ "Ancestral",
                           DAF_p >= 0.55 & Alt_count > Ref_count ~ "Derived",
                           DAF_p <=0.45 & Ref_count > Alt_count ~ "Derived",
@@ -492,41 +490,53 @@ daf_bias <- daf_all %>%
                             Chr == "Chr08" ~ paste("8_", Position, sep = ""),
                             Chr == "Chr09" ~ paste("9_", Position, sep = ""),
                             Chr == "Chr10" ~ paste("10_", Position, sep = ""))) %>%
-  dplyr::select(CHR_POS, weight) %>%
+  dplyr::select(CHR_POS, weight, Ref, Alt) %>%
   na.omit(DAF)
 
 
 Master <- Master %>%
   left_join(daf_bias, by = "CHR_POS")
 
-derivao <- Master %>%
-  filter(Class == "Derived")
 
-for (i in 7:491){
-  derivao[,i][derivao[,i] == 0] <- "ZERO"
-  derivao[,i][derivao[,i] == 2] <- "TWO"
-}
-
-for (i in 7:491){
-  derivao[,i][derivao[,i] == "ZERO"] <- as.numeric(2)
-  derivao[,i][derivao[,i] == "TWO"] <- as.numeric(0)
-  derivao[,i] <- as.numeric(derivao[,i])
-}
-  
+testeadno <- Master %>%
+  filter(Class == "Ancestral")  %>%
+  select("COUNTED", "ALT", "Class", "Ref", "Alt")
 
 
-##
-ancestral <- Master %>%
-  filter(Class == "Ancestral") 
+derivao_mal <- Master %>%
+  filter(Class == "Derived") %>%
+  filter(COUNTED!=Ref)
+
+derivao_bien <- Master %>%
+  filter(Class == "Derived") %>%
+  filter(COUNTED==Ref)
+
+ancestral_mal <- Master %>%
+  filter(Class == "Ancestral") %>%
+  filter(COUNTED == Ref)
+
+ancestral_bien <- Master %>%
+  filter(Class == "Ancestral") %>%
+  filter(COUNTED!=Ref)
 
 
-Ready <- rbind(ancestral, derivao)
+modify <- rbind(derivao_mal, ancestral_mal)
+modify <- as_tibble(modify)
+modify <- modify %>%
+  mutate_if(is.integer, str_replace_all, pattern ="0" , replacement= "ZERO") %>%
+  mutate_if(is.character, str_replace_all, pattern ="2" , replacement= "TWO") %>%
+  mutate_if(is.character, str_replace_all, pattern ="ZERO" , replacement= "2") %>%
+  mutate_if(is.character, str_replace_all, pattern ="TWO" , replacement= "0")
+
+
+
+Ready <- rbind(ancestral_bien, derivao_bien, modify)
 
 ```
 
 ## Homozygous Burden - 
 
-```{r, fig.height=4, fig.width=9}
+```{r, fig.height=4, fig.width=7}
 
 #Calculating different burden levels
 library(ggplot2)
@@ -547,6 +557,67 @@ for (i in 7:491){
     filter(get(name) == 2)
   load <-  sum(a$weight)/sum(tabla)
   counts <- sum(a$weight)
+  valores <- c(valores, load)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+colors <- c( "darkblue", "grey", "grey", "grey", "grey", "grey", fox[5], fox[5])
+
+
+only_race <- only_race %>%
+  filter(!str_detect(ID, "dup"))
+
+p1<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank())
+
+p1
+
+
+#ggsave("/home/roberto/Sorghum/Figures/burden_all.png", plot= p1, device = "png", scale = 1, width = 9, height = 5, units = c("in"),dpi = 750, limitsize = TRUE)
+
+
+```
+
+## Additive Burden
+
+```{r}
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready)[i]
+  tabla <- table(Ready[,i])
+  
+  a <- Ready %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight,
+                            get(name) ==2 ~ weight*2))
+  counts <-  sum(a$Values, na.rm = T)
   valores <- c(valores, counts)
 }
 
@@ -568,6 +639,10 @@ fox <- wes_palette("FantasticFox1")
 colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
 colors <- c( "darkblue", "grey", "grey", "grey", "grey", "grey", fox[5], fox[5])
 
+
+only_race <- only_race %>%
+  filter(!str_detect(ID, "dup"))
+
 p1<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = colors)+
@@ -580,20 +655,78 @@ p1<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
         axis.text.y=element_text(colour="black", size = 10),
         legend.key = element_rect(fill = "transparent", colour = "transparent")) +
   theme(legend.position="none", legend.direction="vertical",
-        legend.title = element_blank())# +
-  #ylim(0,0.125)
+        legend.title = element_blank())
 
 p1
 
-#ggsave("/home/roberto/Sorghum/Figures/burden_all.png", plot= p1, device = "png", scale = 1, width = 9, height = 5, units = c("in"),dpi = 750, limitsize = TRUE)
 
 
 ```
 
+## Heterozygous Burden
+
+```{r}
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready)[i]
+  tabla <- table(Ready[,i])
+  
+  a <- Ready %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight))
+  counts <-  sum(a$Values, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID")
+
+
+pal <- wes_palette("FantasticFox1", 8, type = "continuous")
+wes <- wes_palette("Cavalcanti1")
+chev <- wes_palette("Chevalier1")
+fox <- wes_palette("FantasticFox1")
+
+colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
+colors <- c( "darkblue", "grey", "grey", "grey", "grey", "grey", fox[5], fox[5])
+
+
+only_race <- only_race %>%
+  filter(!str_detect(ID, "dup"))
+
+p1<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = colors)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank())
+
+p1
+
+
+
+```
+
+
+
 ## Homozygous Burden Conserved - 
 
 
-```{r, fig.height=4, fig.width=9}
+```{r, fig.height=4, fig.width=6}
 
 Ready <- Ready %>%
   filter(SET == "Deleterious")
@@ -606,7 +739,6 @@ header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header")
 burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
 burden_table[,1] <- header
 colnames(burden_table) <- c("ID", "Burden")
-
 
 valores <- vector()
 for (i in 7:491){
@@ -638,6 +770,8 @@ fox <- wes_palette("FantasticFox1")
 colors <- c( fox[1], fox[3], "grey", wes[1], chev[1],"red", "gray31", fox[5])
 colors <- c( "darkblue", "grey", "grey", "grey", "grey", "grey", fox[5], fox[5])
 
+only_race <- only_race %>%
+  filter(!str_detect(ID, "dup"))
 p1<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = colors)+
@@ -660,6 +794,7 @@ p1
 
 ```
 
+
 # BURDEN LANDRACES/CULTIVATED/WW
 
 ```{r, fig.height=5, fig.width=3.5}
@@ -669,6 +804,9 @@ library(ggplot2)
 library(scales)
 library(wesanderson)
 #Calculating different burden levels
+
+
+Ready <- rbind(ancestral_bien, derivao_bien, modify)
 
 header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
 
@@ -686,7 +824,7 @@ for (i in 7:491){
     filter(get(name) == 2)
   load <-  sum(a$weight)/sum(tabla)
   counts <- sum(a$weight)
-  valores <- c(valores, load)
+  valores <- c(valores, counts)
 }
 
 burden_table$Burden <- valores
@@ -703,6 +841,7 @@ AllTAB <- only_race
 
 wes <- wes_palette("Cavalcanti1")
 wesi <- c(wes[1], wes[2], wes[5])
+
 
 Sorghum_all<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
@@ -724,36 +863,221 @@ Sorghum_all
 
 ```
 
-# Private alleles
+## Heterozygous burden
+
+```{r, fig.height=5, fig.width=3.5}
+
+
+library(ggplot2)
+library(scales)
+library(wesanderson)
+#Calculating different burden levels
+
+
+Ready <- rbind(ancestral_bien, derivao_bien, modify) 
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready)[i]
+  tabla <- table(Ready[,i])
+  
+  a <- Ready %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight))
+  counts <-  sum(a$Values, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+AllTAB <- only_race
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+
+Sorghum_all<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylim(0, 220)
+
+Sorghum_all
+
+
+
+```
+
+## Additive Burden
+
+```{r, fig.height=5, fig.width=3.5}
+
+Ready <- rbind(ancestral_bien, derivao_bien, modify) 
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready)[i]
+  tabla <- table(Ready[,i])
+  
+  a <- Ready %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight,
+                            get(name) ==2 ~ weight*2))
+  counts <-  sum(a$Values, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+AllTAB <- only_race
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+
+Sorghum_all<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) 
+
+Sorghum_all
+
+
+```
+
+
+# Calculating fix, segregating, private
 ```{r}
+library(hablar)
 
 ## WILDS
 
 wilds <- only_race %>%
   filter(Race == "Wild")
 wildID <- wilds$ID
-keep <- c(colnames(Master)[1:6], wildID)
+keep <- c(colnames(Ready)[1:6], wildID)
 
-wilddel <- Master %>%
+wilddel <- as_tibble(Ready) %>%
   dplyr::select(keep) %>%
+  mutate_at(vars(7:13), funs(as.integer)) %>%
   mutate(sumVar = rowSums(.[7:13], na.rm=T)) %>%
-  filter(sumVar > 1)
+  mutate(NASA = rowSums(is.na(.[7:13]))) %>%
+  mutate(PERCE = sumVar/(14-NASA*2)) %>%
+  filter(NASA < 4) %>%
+  filter(PERCE == 1)
 
-wildSNP <- wilddel$CHR_POS
+wild_fixed <- wilddel$CHR_POS
+
+wilddel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:13), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:13], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:13]))) %>%
+  mutate(PERCE = sumVar/(14-NASA*2)) %>%
+  filter(NASA < 4) %>%
+  filter(PERCE > 0 & PERCE < 1)
+
+wild_segregating <- wilddel$CHR_POS[]
+
+
+wilddel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:13), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:13], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:13]))) %>%
+  mutate(PERCE = sumVar/(14-NASA*2)) %>%
+  filter(NASA < 4) %>%
+  filter(PERCE == 0)
+
+wild_absent <- wilddel$CHR_POS[]
   
 ##LANDRACES
 
 land <- only_race %>%
   filter(Race == "Landrace")
 landID <- land$ID
-keep <- c(colnames(Master)[1:6], landID)
+keep <- c(colnames(Ready)[1:6], landID)
 
-landdel <- Master %>%
+landdel <- as_tibble(Ready) %>%
   dplyr::select(keep) %>%
+  mutate_at(vars(7:23), funs(as.integer)) %>%
   mutate(sumVar = rowSums(.[7:23], na.rm=T)) %>%
-  filter(sumVar > 1)
+  mutate(NASA = rowSums(is.na(.[7:23]))) %>%
+  mutate(PERCE = sumVar/(34-NASA*2)) %>%
+  filter(NASA < 8) %>%
+  filter(PERCE == 1)
 
-landSNP <- landdel$CHR_POS
+land_fixed <- landdel$CHR_POS
+
+landdel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:23), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:23], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:23]))) %>%
+  mutate(PERCE = sumVar/(34-NASA*2)) %>%
+  filter(NASA < 8) %>%
+  filter(PERCE > 0 & PERCE < 1)
+
+land_segregating <- landdel$CHR_POS
+
+landdel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:23), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:23], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:23]))) %>%
+  mutate(PERCE = sumVar/(34-NASA*2)) %>%
+  filter(NASA < 8) %>%
+  filter(PERCE == 0)
+
+land_absent <- landdel$CHR_POS
+
 
 ##IMPROVED
 
@@ -762,27 +1086,70 @@ impro <- only_race %>%
 improID <- impro$ID
 keep <- c(colnames(Master)[1:6], improID)
 
-improdel <- Master %>%
+improdel <- as_tibble(Ready) %>%
   dplyr::select(keep) %>%
+  mutate_at(vars(7:19), funs(as.integer)) %>%
   mutate(sumVar = rowSums(.[7:19], na.rm=T)) %>%
-  filter(sumVar > 1)
+  mutate(NASA = rowSums(is.na(.[7:19]))) %>%
+  mutate(PERCE = sumVar/(26-NASA*2)) %>%
+  filter(NASA < 6) %>%
+  filter(PERCE == 1)
 
-improSNP <- improdel$CHR_POS
+impro_fixed <- improdel$CHR_POS
 
-inter <- Reduce(intersect, list(improSNP,landSNP,wildSNP))
+improdel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:19), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:19], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:19]))) %>%
+  mutate(PERCE = sumVar/(26-NASA*2)) %>%
+  filter(NASA < 6) %>%
+  filter(PERCE > 0 & PERCE < 1)
+
+impro_segregating <- improdel$CHR_POS
+
+improdel <- as_tibble(Ready) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(7:19), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[7:19], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[7:19]))) %>%
+  mutate(PERCE = sumVar/(26-NASA*2)) %>%
+  filter(NASA < 6) %>%
+  filter(PERCE == 0)
+
+impro_absent <- improdel$CHR_POS
+
+
+
+union_absent_Land_impro <- Reduce(intersect, list(impro_absent,land_absent))
+wild_private <- Reduce(intersect, list(wild_segregating,union_absent_Land_impro))
+
+union_absent_wild_impro <- Reduce(intersect, list(impro_absent,wild_absent))
+landrace_private <- Reduce(intersect, list(land_segregating,union_absent_wild_impro))
+
+union_absent_wild_land <- Reduce(intersect, list(wild_absent,land_absent))
+improved_private <- Reduce(intersect, list(impro_segregating,union_absent_wild_land))
+
+segregating <- Reduce(intersect, list(impro_segregating,land_segregating,wild_segregating))
+
+segregating_union <- Reduce(union, list(impro_segregating,land_segregating,wild_segregating))
+
+fixed_union <- Reduce(union, list(impro_fixed,land_fixed,wild_fixed))
 
 ```
 
-## Burden on SEG variants
+## Burden on Common SEG variants
 
-```{r}
+```{r, fig.width=3, fig.height=4}
 library(ggplot2)
 library(scales)
 library(wesanderson)
 #Calculating different burden levels
 
-Ready_del <- Master %>%
-  filter(CHR_POS %in% inter)
+#Segregating for Wilds
+
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% segregating)
 
 header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
 
@@ -800,7 +1167,7 @@ for (i in 7:491){
     filter(get(name) == 2)
   load <-  sum(a$weight)/sum(tabla)
   counts <- sum(a$weight)
-  valores <- c(valores, load)
+  valores <- c(valores, counts)
 }
 
 
@@ -837,68 +1204,24 @@ Sorghum_seg
 
 ```
 
-## Burden FIXED variants
+## Burden on SEG variants per group:
 
-```{r}
+```{r, fig.width=3, fig.height=4}
+library(ggplot2)
+library(scales)
+library(wesanderson)
+#Calculating different burden levels
 
+#Segregating for Wilds
 
-#########################
-## WILDS
-
-wilds <- only_race %>%
-  filter(Race == "Wild")
-wildID <- wilds$ID
-keep <- c(colnames(Master)[1:6], wildID)
-
-wilddel <- Master %>%
-  dplyr::select(keep) %>%
-  mutate(sumVar = rowSums(.[7:13], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar == 28)
-
-wildSNP <- wilddel$CHR_POS
-
-##LANDRACES
-
-land <- only_race %>%
-  filter(Race == "Landrace")
-landID <- land$ID
-keep <- c(colnames(Master)[1:6], landID)
-
-
-landdel <- Master %>%
-  dplyr::select(keep) %>%
-  mutate(sumVar = rowSums(.[7:23], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar == 34)
-
-
-landSNP <- landdel$CHR_POS
-
-##IMPROVED
-
-impro <- only_race %>%
-  filter(Race == "Improved")
-improID <- impro$ID
-keep <- c(colnames(Master)[1:6], improID)
-
-improdel <- Master %>%
-  dplyr::select(keep) %>%
-  mutate(sumVar = rowSums(.[7:19], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar == 24)
-
-
-improSNP <- improdel$CHR_POS
-
-inter <- Reduce(union, list(improSNP,landSNP,wildSNP))
-
-Ready_del <- Master %>%
-  filter(CHR_POS %in% inter)
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% wild_segregating)
 
 header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
 
 burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
 burden_table[,1] <- header
 colnames(burden_table) <- c("ID", "Burden")
-
 
 
 valores <- vector()
@@ -910,7 +1233,7 @@ for (i in 7:491){
     filter(get(name) == 2)
   load <-  sum(a$weight)/sum(tabla)
   counts <- sum(a$weight)
-  valores <- c(valores, load)
+  valores <- c(valores, counts)
 }
 
 
@@ -924,12 +1247,89 @@ only_race <- race %>%
   mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
   mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
   mutate(Race= recode(Race, "Landraces" = "Landrace"))
-fixTAB <- only_race
+segwild <- only_race %>%
+  filter(Race == "Wild")
 
-wes <- wes_palette("Cavalcanti1")
-wesi <- c(wes[1], wes[2], wes[5])
+#Segregating for Landraces
 
-Sorghum_fix<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% land_segregating)
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready_del)[i]
+  tabla <- table(Ready_del[,i])
+  a <- Ready_del %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight)/sum(tabla)
+  counts <- sum(a$weight)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+segland <- only_race %>%
+  filter(Race == "Landrace")
+
+
+#Segregating for Improved
+
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% impro_segregating)
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready_del)[i]
+  tabla <- table(Ready_del[,i])
+  a <- Ready_del %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight)/sum(tabla)
+  counts <- sum(a$weight)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+segimpro <- only_race %>%
+  filter(Race == "Improved")
+
+
+tablaseg <- rbind(segimpro, segland, segwild)
+Sorghum_seg<-ggplot(tablaseg, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = wesi)+
   theme(axis.line = element_line(size=1, colour = "black"),
@@ -943,11 +1343,157 @@ Sorghum_fix<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   theme(legend.position="none", legend.direction="vertical",
         legend.title = element_blank()) 
 
-Sorghum_fix
+Sorghum_seg
 
 
 
 ```
+
+## Private
+
+```{r, fig.width=3, fig.height=4}
+library(ggplot2)
+library(scales)
+library(wesanderson)
+#Calculating different burden levels
+
+#Segregating for Wilds
+
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% wild_private)
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready_del)[i]
+  tabla <- table(Ready_del[,i])
+  a <- Ready_del %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight)/sum(tabla)
+  counts <- sum(a$weight)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+segwild <- only_race %>%
+  filter(Race == "Wild")
+
+#Segregating for Landraces
+
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% landrace_private)
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready_del)[i]
+  tabla <- table(Ready_del[,i])
+  a <- Ready_del %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight)/sum(tabla)
+  counts <- sum(a$weight)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+segland <- only_race %>%
+  filter(Race == "Landrace")
+
+
+#Segregating for Improved
+
+Ready_del <- Ready %>%
+  filter(CHR_POS %in% improved_private)
+
+header <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/header") 
+
+burden_table <- as.data.frame(matrix(nrow= 485,ncol=2))
+burden_table[,1] <- header
+colnames(burden_table) <- c("ID", "Burden")
+
+
+valores <- vector()
+for (i in 7:491){
+  name <- colnames(Ready_del)[i]
+  tabla <- table(Ready_del[,i])
+  a <- Ready_del %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight)/sum(tabla)
+  counts <- sum(a$weight)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Sorghum/Evol_model/Burden/race_version2", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  inner_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "Improved varieties" = "Improved")) %>%
+  mutate(Race= recode(Race, "Wild and weedy" = "Wild")) %>%
+  mutate(Race= recode(Race, "Landraces" = "Landrace"))
+segimpro <- only_race %>%
+  filter(Race == "Improved")
+
+
+tablaseg <- rbind(segimpro, segland, segwild)
+Sorghum_seg<-ggplot(tablaseg, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) 
+
+Sorghum_seg
+
+
+
+```
+
 
 ## Plotting Sorghum
 
@@ -1001,16 +1547,27 @@ header <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/true_heade
 
 dosage <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Burden_for_R", header = T) %>%
   `colnames<-`(header[,1])
+
+#remove one duplicate that i forgot removing earlier
 dosage <- dosage[,-72]
 
 daf <- read.delim(file = "/workdir/rjl278/Sorghum/Evol_model/Derived_alleles/MAIZE/READY_to_run/splitting/DAFtoR", header = F) %>% 
-  `colnames<-`(c("link","DAF_p"))
+  `colnames<-`(c("link","DAF_p")) %>%
+  left_join(daf_maize, by="link") 
 
+# My derived alleles 
 dosage <- dosage %>%
   unite(link, CHR, POS) %>%
   right_join(daf, by="link")%>%
   mutate(Class = case_when(DAF_p >=0.55 ~ "Ancestral",
                             DAF_p <=0.45 ~ "Derived"))
+
+# Wang et al. derived alleles
+#dosage <- dosage %>%
+#  unite(link, CHR, POS) %>%
+#  right_join(daf, by="link")%>%
+#  mutate(Class = case_when(COUNTED == dallele ~ "Ancestral",
+#                            ALT == dallele ~ "Derived"))
 
 
 # Modify encoding : Ancestral allele = 0, Derived allele = 1
@@ -1021,20 +1578,16 @@ derivao <- dosage %>%
 ancestral <- dosage %>%
   filter(Class == "Ancestral") 
 
-for (i in 4:96){
-  derivao[,i][derivao[,i] == 0] <- "ZERO"
-  derivao[,i][derivao[,i] == 2] <- "TWO"
-}
 
-for (i in 4:96){
-  derivao[,i][derivao[,i] == "ZERO"] <- as.numeric(2)
-  derivao[,i][derivao[,i] == "TWO"] <- as.numeric(0)
-  derivao[,i] <- as.numeric(derivao[,i])
-}
-  
+columnas <- colnames(derivao)[4:97]
+modify <- as_tibble(derivao)
+modify <- modify %>%
+  mutate_at(columnas, str_replace_all, pattern ="0" , replacement= "ZERO")%>%
+  mutate_at(columnas, str_replace_all, pattern ="2" , replacement= "TWO") %>%
+  mutate_at(columnas, str_replace_all, pattern ="ZERO" , replacement= "2") %>%
+  mutate_at(columnas, str_replace_all, pattern ="TWO" , replacement= "0")
 
-##
-Ready_maize <- rbind(ancestral, derivao) %>%
+Ready_maize <- rbind(ancestral, modify) %>%
   left_join(maize_weights, by="link")
 
 ```
@@ -1042,40 +1595,31 @@ Ready_maize <- rbind(ancestral, derivao) %>%
 
 ```{r,fig.height=5, fig.width=3.5}
 
-header <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/true_header", header = F, stringsAsFactors = F) 
+#header <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/true_header", header = F, stringsAsFactors = F) 
 
-dosage <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Burden_for_R", header = T) %>%
-  `colnames<-`(header[,1]) 
+#dosage <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Burden_for_R", header = T) %>%
+#  `colnames<-`(header[,1]) 
 
-dosage <- dosage[,-40]
-header <- header[-40,1]
+#dosage <- dosage[,40]
+#header <- header[-40,1]
 
 dosage <- Ready_maize 
-
 header <- colnames(dosage)
 
-burden_table <- as.data.frame(matrix(nrow= 93,ncol=2))
-burden_table[,1] <- header[4:96]
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
 colnames(burden_table) <- c("ID", "Burden")
 
 valores <- vector()
-for (i in 4:96){
-  a <- table(dosage[,i])
-  b <- a["2"]/sum(a)
-  valores <- c(valores, b)
-}
-
-
-valores <- vector()
-for (i in 4:96){
+for (i in 4:97){
   name <- colnames(dosage)[i]
   tabla <- table(dosage[,i])
   a <- dosage %>%
     select(i, weight) %>%
     filter(get(name) == 2)
-  load <-  sum(a$weight)/sum(tabla)
-  counts <- sum(a$weight)
-  valores <- c(valores, load)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
 }
 
 
@@ -1113,8 +1657,125 @@ Maize_burden
 
 ```
 
+## Heterozygous burden
 
-## Segregating and fixed
+```{r, fig.height=5, fig.width=3.5}
+
+dosage <- Ready_maize 
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  
+  a <- dosage %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight))
+  counts <- sum(a$Values, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+AllTAB <- only_race
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+Maize_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylab("")
+
+Maize_burden
+
+
+```
+
+## Additive burden
+
+```{r, fig.height=5, fig.width=3.5}
+
+dosage <- Ready_maize 
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  
+  a <- dosage %>%
+    select(i, weight) %>%
+    mutate(Values = case_when(get(name) == 1 ~ weight,
+                              get(name) == 2 ~ weight*2))
+  counts <- sum(a$Values, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+AllTAB <- only_race
+
+wes <- wes_palette("Cavalcanti1")
+wesi <- c(wes[1], wes[2], wes[5])
+
+Maize_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylab("")
+
+Maize_burden
+
+
+```
+
+# Segregating and fixed
 
 ```{r}
 
@@ -1125,69 +1786,165 @@ wilds <- only_race %>%
 wildID <- wilds$ID
 keep <- c(colnames(Ready_maize)[1:3], wildID)
 
-wilddel <- Ready_maize %>%
+wilddel <- as_tibble(Ready_maize)%>%
   dplyr::select(keep) %>%
+  mutate_at(vars(4:23), funs(as.integer)) %>%
   mutate(sumVar = rowSums(.[4:23], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar == 38)
+  mutate(NASA = rowSums(is.na(.[4:23]))) %>%
+  mutate(PERCE = sumVar/(40-NASA*2)) %>%
+  filter(NASA < 10) %>%
+  filter(PERCE == 1)
 
-wildSNP <- wilddel$link
+wild_fixed <- wilddel$link
+
+wilddel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:23), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:23], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[4:23]))) %>%
+  mutate(PERCE = sumVar/(40-NASA*2)) %>%
+  filter(NASA < 10) %>%
+  filter(PERCE > 0 & PERCE < 1)
+
+wild_segregating <- wilddel$link
+
+
+wilddel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:23), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:23], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[4:23]))) %>%
+  mutate(PERCE = sumVar/(40-NASA*2)) %>%
+  filter(NASA < 10) %>%
+  filter(PERCE == 0)
+
+wild_absent <- wilddel$link
   
-## LANDRACES
+##LANDRACES
 
 land <- only_race %>%
   filter(Race == "Landrace")
 landID <- land$ID
 keep <- c(colnames(Ready_maize)[1:3], landID)
 
-landdel <- dosage %>%
+landdel <- as_tibble(Ready_maize) %>%
   dplyr::select(keep) %>%
-  mutate(sumVar = rowSums(.[4:28], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar > 40)
+  mutate_at(vars(4:28), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:28], na.rm=T))%>%
+  mutate(NASA = rowSums(is.na(.[4:28]))) %>%
+  mutate(PERCE = sumVar/(50-NASA*2)) %>%
+  filter(NASA < 13) %>%
+  filter(PERCE > 0.9)
 
-landSNP <- landdel$link
+land_fixed <- landdel$link
 
-## IMPROVED
+landdel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:28), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:28], na.rm=T))%>%
+  mutate(NASA = rowSums(is.na(.[4:28]))) %>%
+  mutate(PERCE = sumVar/(50-NASA*2)) %>%
+  filter(NASA < 13) %>%
+  filter(PERCE > 0 & PERCE < 1)
+
+land_segregating <- landdel$link
+
+landdel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:28), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:28], na.rm=T))%>%
+  mutate(NASA = rowSums(is.na(.[4:28]))) %>%
+  mutate(PERCE = sumVar/(50-NASA*2)) %>%
+  filter(NASA < 13) %>%
+  filter(PERCE == 0)
+
+land_absent <- landdel$link
+
+
+##IMPROVED
 
 impro <- only_race %>%
   filter(Race == " Improved")
 improID <- impro$ID
 keep <- c(colnames(Ready_maize)[1:3], improID)
 
-improdel <- dosage %>%
+improdel <- as_tibble(Ready_maize) %>%
   dplyr::select(keep) %>%
+  mutate_at(vars(4:51), funs(as.integer)) %>%
   mutate(sumVar = rowSums(.[4:51], na.rm=T)) %>%
-  filter(sumVar == 0 | sumVar > 100)
+  mutate(NASA = rowSums(is.na(.[4:51]))) %>%
+  mutate(PERCE = sumVar/(96-NASA*2)) %>%
+  filter(NASA < 26) %>%
+  filter(PERCE >= 0.9)
 
-improSNP <- improdel$link
+impro_fixed <- improdel$link
 
-inter <- Reduce(union, list(improSNP,landSNP,wildSNP))
+improdel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:51), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:51], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[4:51]))) %>%
+  mutate(PERCE = sumVar/(96-NASA*2)) %>%
+  filter(NASA < 26) %>%
+  filter(PERCE > 0 & PERCE < 9)
+
+impro_segregating <- improdel$link
+
+improdel <- as_tibble(Ready_maize) %>%
+  dplyr::select(keep) %>%
+  mutate_at(vars(4:51), funs(as.integer)) %>%
+  mutate(sumVar = rowSums(.[4:51], na.rm=T)) %>%
+  mutate(NASA = rowSums(is.na(.[4:51]))) %>%
+  mutate(PERCE = sumVar/(96-NASA*2)) %>%
+  filter(NASA < 26) %>%
+  filter(PERCE == 0)
+
+impro_absent <- improdel$link
+
+
+
+union_absent_Land_impro <- Reduce(intersect, list(impro_absent,land_absent))
+wild_private <- Reduce(intersect, list(wild_segregating,union_absent_Land_impro))
+
+union_absent_wild_impro <- Reduce(intersect, list(impro_absent,wild_absent))
+landrace_private <- Reduce(intersect, list(land_segregating,union_absent_wild_impro))
+
+union_absent_wild_land <- Reduce(intersect, list(wild_absent,land_absent))
+improved_private <- Reduce(intersect, list(impro_segregating,union_absent_wild_land))
+
+segregating <- Reduce(intersect, list(impro_segregating,land_segregating,wild_segregating))
+
+segregating_union <- Reduce(union, list(impro_segregating,land_segregating,wild_segregating))
+
+fixed_union <- Reduce(union, list(impro_fixed,land_fixed,wild_fixed))
+
 
 ```
 
+### Burden on Common Seg variants
 
-### Segregating
+```{r, fig.width=3, fig.height=4}
 
-```{r}
+dosage <- Ready_maize %>%
+  filter(link %in% wild_private)
 
-seg <- Ready_maize %>%
-  filter(!link %in% inter)
-  
+header <- colnames(dosage)
+
 burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
-burden_table[,1] <- header[5:98]
+burden_table[,1] <- header[4:97]
 colnames(burden_table) <- c("ID", "Burden")
 
 valores <- vector()
-for (i in 5:98){
-  name <- colnames(seg)[i]
-  tabla <- table(seg[,i])
-  a <- seg %>%
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
     select(i, weight) %>%
     filter(get(name) == 2)
-  load <-  sum(a$weight)/sum(tabla)
-  counts <- sum(a$weight)
-  valores <- c(valores, load)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
 }
-
 
 burden_table$Burden <- valores
 
@@ -1198,52 +1955,194 @@ only_race <- race %>%
   left_join(burden_table, by="ID") %>%
   mutate(Race= recode(Race, "wild" = "Wild")) %>%
   filter(!ID == "B73")
-segTAB <- only_race
+AllTAB <- only_race
 
-library(wesanderson)
 wes <- wes_palette("Cavalcanti1")
 wesi <- c(wes[1], wes[2], wes[5])
 
-Maize_seg<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+Maize_burden<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = wesi)+
   theme(axis.line = element_line(size=1, colour = "black"),
         panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
         panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.text.x=element_text(colour="black", size = 10),
         axis.text.y=element_text(colour="black", size = 10),
         legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
   ylab("")
+
+Maize_burden
+
+
+```
+
+### Burden on SEG variants per group
+
+```{r, fig.width=3, fig.height=4}
+
+
+#Calculating different burden levels
+
+#Segregating for Wilds
+
+dosage <- Ready_maize %>%
+  filter(link %in% wild_segregating)
+
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+segwild <- only_race %>%
+  filter(Race == "Wild")
+
+#Segregating for Landraces
+
+dosage <- Ready_maize %>%
+  filter(link %in% land_segregating)
+
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+segland <- only_race %>%
+  filter(Race == "Landrace")
+
+
+#Segregating for Improved
+
+dosage <- Ready_maize %>%
+  filter(link %in% impro_segregating)
+
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+segimpro <- only_race %>%
+  filter(Race == " Improved")
+
+
+tablaseg <- rbind(segimpro, segland, segwild)
+Maize_seg<-ggplot(tablaseg, aes(x=Race, y=Burden, fill=Race)) +
+  geom_boxplot() +
+  scale_fill_manual(values = wesi)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) 
 
 Maize_seg
 
 
+
 ```
+### Burden on Private variants
 
-### Segregating
+```{r, fig.width=3, fig.height=4}
 
-```{r}
 
-seg <- Ready_maize %>%
-  filter(link %in% inter)
-  
+#Calculating different burden levels
+
+#Segregating for Wilds
+
+dosage <- Ready_maize %>%
+  filter(link %in% wild_private)
+
+header <- colnames(dosage)
+
 burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
-burden_table[,1] <- header[5:98]
+burden_table[,1] <- header[4:97]
 colnames(burden_table) <- c("ID", "Burden")
 
 valores <- vector()
-for (i in 5:98){
-  name <- colnames(seg)[i]
-  tabla <- table(seg[,i])
-  a <- seg %>%
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
     select(i, weight) %>%
     filter(get(name) == 2)
-  load <-  sum(a$weight)/sum(tabla)
-  counts <- sum(a$weight)
-  valores <- c(valores, load)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
 }
-
 
 burden_table$Burden <- valores
 
@@ -1254,28 +2153,102 @@ only_race <- race %>%
   left_join(burden_table, by="ID") %>%
   mutate(Race= recode(Race, "wild" = "Wild")) %>%
   filter(!ID == "B73")
-fixTAB <- only_race
+segwild <- only_race %>%
+  filter(Race == "Wild")
 
-library(wesanderson)
-wes <- wes_palette("Cavalcanti1")
-wesi <- c(wes[1], wes[2], wes[5])
+#Segregating for Landraces
 
-Maize_fix<-ggplot(only_race, aes(x=Race, y=Burden, fill=Race)) +
+dosage <- Ready_maize %>%
+  filter(link %in% landrace_private)
+
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+segland <- only_race %>%
+  filter(Race == "Landrace")
+
+
+#Segregating for Improved
+
+dosage <- Ready_maize %>%
+  filter(link %in% improved_private)
+
+header <- colnames(dosage)
+
+burden_table <- as.data.frame(matrix(nrow= 94,ncol=2))
+burden_table[,1] <- header[4:97]
+colnames(burden_table) <- c("ID", "Burden")
+
+valores <- vector()
+for (i in 4:97){
+  name <- colnames(dosage)[i]
+  tabla <- table(dosage[,i])
+  a <- dosage %>%
+    select(i, weight) %>%
+    filter(get(name) == 2)
+  load <-  sum(a$weight, na.rm = T)/sum(tabla)
+  counts <- sum(a$weight, na.rm = T)
+  valores <- c(valores, counts)
+}
+
+burden_table$Burden <- valores
+
+race <- read.delim("/workdir/rjl278/Maize/Comparative_Hapmap/Burden/Races", header = F) %>%
+  `colnames<-`(c("ID", "Race"))
+
+only_race <- race %>%
+  left_join(burden_table, by="ID") %>%
+  mutate(Race= recode(Race, "wild" = "Wild")) %>%
+  filter(!ID == "B73")
+segimpro <- only_race %>%
+  filter(Race == " Improved")
+
+
+tablaseg <- rbind(segimpro, segland, segwild)
+Maize_seg<-ggplot(tablaseg, aes(x=Race, y=Burden, fill=Race)) +
   geom_boxplot() +
   scale_fill_manual(values = wesi)+
   theme(axis.line = element_line(size=1, colour = "black"),
         panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
         panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.text.x=element_text(colour="black", size = 10),
         axis.text.y=element_text(colour="black", size = 10),
         legend.key = element_rect(fill = "transparent", colour = "transparent")) +
-  ylab("")
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) 
 
-Maize_fix
+Maize_seg
+
 
 
 ```
+
 
 ## Plotting Maize
 

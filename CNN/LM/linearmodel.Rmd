@@ -8,8 +8,331 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
-plot(cars)
+
+library(tidyr)
+library(magrittr)
+library(caret)
+
+tabla <- read.delim("/workdir/rjl278/Sorghum/Evol_model/CNN/LM/NN.table", stringsAsFactors = F, header = T)
+
+
+accuracy <- vector()
+
+for (i in 1:10) { 
+  lista <- training_samples <- tabla$NEWpi %>%
+    createDataPartition(p = 0.9, list = FALSE) 
+  
+  
+  train.data  <- tabla[training_samples, ]
+  test.data <- tabla[-training_samples, ]
+  
+  # Build the model
+  model <- lm(NEWpi ~., data = train.data)
+  
+  
+  # Make predictions and compute the R2, RMSE and MAE
+  predictions <- model %>% predict(test.data)
+  
+  a <- data.frame( R2 = R2(predictions, test.data$NEWpi),
+              RMSE = RMSE(predictions, test.data$NEWpi),
+              MAE = MAE(predictions, test.data$NEWpi))
+  accuracy <- c(accuracy, sqrt(a[1,1]))
+}
+
+
+
+
 ```
+
+
+```{r}
+
+
+library("nnet")
+library("MESS")
+library("pROC")
+
+accuracyFrac <- vector()
+
+for (i in 1:10) {
+
+  lista <- training_samples <- tabla$NEWpi %>%
+    createDataPartition(p = 0.9, list = FALSE) 
+  
+  train.data  <- tabla[training_samples, ]
+  test.data <- tabla[-training_samples, ]
+  
+  train <- multinom(frac ~., data = train.data)
+  
+  iris.predictions <- predict(train, newdata=test.data, type="prob")
+  head(iris.predictions)
+  
+  a<- multiclass.roc(test.data$frac, iris.predictions)
+  
+  accuracyFrac <- c(accuracyFrac, a$auc[1]) 
+}
+
+```
+
+
+# Nucleotide diversity
+
+```{r, fig.width=3, fig.height=2.5}
+
+accuracies <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/diversity_feat_selection_out.csv") %>%
+  filter(set == "Test") %>%
+  filter(removed_feature == "none")
+
+basal <- mean(accuracies$accuracy)
+
+
+features <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/diversity_feat_selection_out.csv") %>%
+  filter(set == "Test") %>%
+  filter(!removed_feature == "none") %>%
+  mutate(delta = basal - accuracy) %>%
+  mutate(removed_feature = recode(removed_feature, "winLen" = "wind length")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTsorghum" = "SIFT")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTcounts" = "CDS variants")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mpi" = "maize pi")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mexp" = "maize exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "geneLen" = "gene length")) %>%
+  mutate(removed_feature = recode(removed_feature, "Sexp" = "sorghum exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "frac" = "fractionation"))
+
+
+weso <- wes_palette("Cavalcanti1", 12, type = "continuous")
+
+pi <- ggplot(data=features, aes(x=removed_feature, y=delta, fill=removed_feature)) +
+  geom_boxplot() +
+  ylab("") +
+  xlab("Nucleotide diversity") +
+  scale_fill_manual(values=weso)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  coord_flip() +
+  geom_hline(yintercept=0, size=0.4)
+  
+pi 
+
+ggsave("/workdir/rjl278/Sorghum/Figures/Fig4B.png", plot=pi, device = "png", scale = 1, width = 3, height = 2.5, units = c("in"),dpi = 450, limitsize = TRUE)
+
+```
+
+# Fractionation
+
+```{r, fig.width=3, fig.height=4.5}
+
+frac <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/frac_feat_selection_out.csv") %>%
+  filter(set == "tst") %>%
+  filter(removed_feature == "none")
+
+
+basal <- mean(frac$AUC)
+
+features <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/frac_feat_selection_out.csv") %>%
+  filter(set == "tst") %>%
+  filter(!removed_feature == "none") %>%
+  mutate(delta = basal - AUC) %>%
+  mutate(removed_feature = recode(removed_feature, "winLen" = "wind length")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTsorghum" = "SIFT")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTcounts" = "CDS variants")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mpi" = "maize pi")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mexp" = "maize exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "geneLen" = "gene length")) %>%
+  mutate(removed_feature = recode(removed_feature, "Sexp" = "sorghum exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "frac" = "fractionation")) %>%
+  mutate(removed_feature = recode(removed_feature, "NEWpi" = "sorghum pi"))
+
+
+weso <- wes_palette("Cavalcanti1", 12, type = "continuous")
+
+frac <- ggplot(data=features, aes(x=removed_feature, y=delta, fill=removed_feature)) +
+  geom_boxplot() +
+  ylab("Accuracy delta") +
+  xlab("Syntenic state") +
+  scale_fill_manual(values=weso)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  #scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="none", legend.direction="vertical",
+        legend.title = element_blank()) +
+  coord_flip() +
+  geom_hline(yintercept=0, size=0.4)
+  
+frac 
+
+mix <- pi + frac + plot_layout(ncol = 1)
+mix
+ggsave("/workdir/rjl278/Sorghum/Figures/Fig4C.png", plot=mix, device = "png", scale = 1, width = 3, height = 4.5, units = c("in"),dpi = 450, limitsize = TRUE)
+```
+
+# Deep learning vs Linear model
+
+```{r fig.width=5, fig.height=4}
+
+
+Spi <- tibble(accuracy) %>%
+  mutate(feature = "Sorghum pi") %>%
+  mutate(method = "LM/MLR")
+
+SpiCNN <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/diversity_feat_selection_out.csv") %>%
+  filter(set == "Test") %>%
+  filter(removed_feature == "none") %>% 
+  dplyr::select(accuracy) %>%
+  mutate(feature = "Sorghum pi") %>%
+  mutate(method = "CNN")
+
+Frac <- tibble(accuracyFrac) %>%
+  mutate(feature = "Fractionation") %>%
+  mutate(method = "LM/MLR") %>%
+  rename("accuracy" = accuracyFrac )
+
+FracCNN <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/frac_feat_selection_out.csv") %>%
+  filter(set == "tst") %>%
+  filter(removed_feature == "none") %>%
+  dplyr::select(AUC) %>%
+  rename("accuracy" = AUC) %>%
+  mutate(feature = "Fractionation") %>%
+  mutate(method = "CNN")
+
+  
+Pi <- rbind(Spi, SpiCNN, Frac, FracCNN)
+
+
+frac <- ggplot(data=Pi, aes(x=feature, y=accuracy, fill=method)) +
+  geom_boxplot() +
+  ylab("Accuracy/AUC") +
+  xlab("") +
+  scale_fill_manual(values=weso)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  ylim(0.38, 0.9)
+  
+frac 
+
+#ggsave("/workdir/rjl278/Sorghum/Figures/FigS10C.png", plot= frac, device = "png", scale = 1, width = 5, height = 4, units = c("in"),dpi = 450, limitsize = TRUE)
+
+```
+
+#Figure S10 Diversity
+
+```{r, fig.width=10, fig.height=4}
+
+
+accuracies <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/diversity_feat_selection_out.csv", stringsAsFactors = F) %>%
+  mutate(removed_feature = recode(removed_feature, "winLen" = "wind length")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTsorghum" = "SIFT")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTcounts" = "CDS variants")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mpi" = "maize pi")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mexp" = "maize exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "geneLen" = "gene length")) %>%
+  mutate(removed_feature = recode(removed_feature, "Sexp" = "sorghum exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "frac" = "fractionation")) %>%
+  mutate(removed_feature = recode(removed_feature, "NEWpi" = "sorghum pi")) %>%
+  mutate(removed_feature = recode(removed_feature, "none" = "all"))
+
+accuracies$set <- as.factor(accuracies$set)
+accuracies$set <- factor(accuracies$set, levels = c("Train", "Development", "Test"))
+
+piall <- ggplot(data=accuracies, aes(x=removed_feature, y=accuracy, fill=set)) +
+  geom_boxplot() +
+  ylab("Accuracy") +
+  xlab("") +
+  scale_fill_manual(values=weso)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45,  hjust = 1)) +
+  ylim(0.3, 0.55)
+  
+piall 
+
+ggsave("/workdir/rjl278/Sorghum/Figures/FigS10A.png", plot= piall, device = "png", scale = 1, width = 10, height = 4, units = c("in"),dpi = 450, limitsize = TRUE)
+
+```
+
+
+# Figure S10B Fractionation
+
+```{r}
+
+frac <- read.csv("/workdir/rjl278/Code/Sorghum-HapMap/CNN/output/frac_feat_selection_out.csv", stringsAsFactors = F) %>%
+  mutate(removed_feature = recode(removed_feature, "winLen" = "wind length")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTsorghum" = "SIFT")) %>%
+  mutate(removed_feature = recode(removed_feature, "SIFTcounts" = "CDS variants")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mpi" = "maize pi")) %>%
+  mutate(removed_feature = recode(removed_feature, "tau" = "ssw")) %>%
+  mutate(removed_feature = recode(removed_feature, "Mexp" = "maize exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "geneLen" = "gene length")) %>%
+  mutate(removed_feature = recode(removed_feature, "Sexp" = "sorghum exp")) %>%
+  mutate(removed_feature = recode(removed_feature, "frac" = "fractionation")) %>%
+  mutate(removed_feature = recode(removed_feature, "NEWpi" = "sorghum pi"))%>%
+  mutate(set = recode(set, "dev" = "Development"))%>%
+  mutate(set = recode(set, "trn" = "Test"))%>%
+  mutate(set = recode(set, "tst" = "Train")) %>%
+  mutate(removed_feature = recode(removed_feature, "none" = "all"))
+
+
+frac$set <- factor(frac$set, levels = c("Train", "Development", "Test"))
+
+
+fracall <- ggplot(data=frac, aes(x=removed_feature, y=AUC, fill=set)) +
+  geom_boxplot() +
+  ylab("Accuracy") +
+  xlab("Feature removed") +
+  scale_fill_manual(values=weso)+
+  theme(axis.line = element_line(size=1, colour = "black"),
+        panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+        panel.border = element_blank(), panel.background = element_blank()) +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x=element_text(colour="black", size = 10),
+        axis.text.y=element_text(colour="black", size = 10),
+        legend.key = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45,  hjust = 1)) +
+  ylim(0.8, 0.95)
+  
+fracall 
+
+ggsave("/workdir/rjl278/Sorghum/Figures/FigS10B.png", plot= fracall, device = "png", scale = 1, width = 10, height = 4, units = c("in"),dpi = 450, limitsize = TRUE)
+
+```
+
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 

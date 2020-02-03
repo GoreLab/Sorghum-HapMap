@@ -1,6 +1,6 @@
 This repository includes code use in the article:
 
-#  **Comparative evolutionary analysis and prediction of genomic diversity patterns between sorghum and maize**
+#  **Comparative evolutionary analysis and prediction of deleterious mutation patterns between sorghum and maize**
 ![language: R](https://img.shields.io/badge/language-R-blue.svg)
 ![language: Python](https://img.shields.io/badge/language-Python-green.svg)
 ![status: WIP](https://img.shields.io/badge/status-WorkInProgress-red.svg)
@@ -75,5 +75,5 @@ This repository includes code use in the article:
   *data:* (`/HAPMAP/CIRCOS/cplot`) - data used as input
   
   ## Data availability:
-  The raw sequencing data is available through the NCBI BioProject **PRJNA513297**. Alignment Bam files are available through the CyVerse repository #######. Code used throughout the article is available through this GitHub repository. For any other inquiry please contact the authors directly. 
+The raw sequencing data for the TERRA-MEPP lines is available through the NCBI BioProject **PRJNA513297**. Mace et al. raw data is available through the BioProject **PRJNA182489**, TERRA-REF raw data is available through the data commons database at CyVerse: http://datacommons.cyverse.org/browse/iplant/home/shared/terraref. Gene expression raw data is available through the Bioproject **PRJNA503076**. SIFT raw results and VCF files among others are available through the CyVerse repository: http://datacommons.cyverse.org/browse/iplant/home/shared/GoreLab/dataFromPubs   (DOI:10.####/pending once accepted). Code used throughout the article is available at the GitHub repository: https://github.com/GoreLab/Sorghum-HapMap.
   
